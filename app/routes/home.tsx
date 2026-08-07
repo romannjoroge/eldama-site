@@ -14,7 +14,7 @@ export function meta({}: Route.MetaArgs) {
     {
       name: "description",
       content:
-        "Eldama is one certified partner for Microsoft 365, IT outsourcing, endpoint security, cloud services, and email security. Get a tailored quote today.",
+        "Eldama Technologies is a value-added technology company specialising in Cloud Services, Cybersecurity, Managed IT and Distribution of best-of-breed ICT solutions across Kenya, East and West Africa. Get a tailored quote today.",
     },
   ];
 }

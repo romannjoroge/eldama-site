@@ -59,10 +59,13 @@ export const responseTimeHours = 24;
 
 export const company = {
   name: "Eldama",
+  legalName: "Eldama Technologies Ltd",
   tagline: "Your outsourced IT department",
-  email: "hello@eldama.example",
-  phone: "+254 700 000 000",
-  address: "Nairobi, Kenya",
+  description:
+    "Eldama Technologies is a value-added technology company specialising in Cloud Services, Cybersecurity, Managed IT and Distribution of best-of-breed ICT solutions across Kenya, East and West Africa.",
+  email: "info@eldama.co.ke",
+  phone: "+254 20 365 3000",
+  address: "No.8 Eldama Ravine Close, Nairobi",
 };
 
 export const services: Service[] = [
@@ -74,10 +77,14 @@ export const services: Service[] = [
     description:
       "Eldama is a Microsoft Gold Partner for Microsoft 365. We plan, deploy, migrate, and support the full Microsoft 365 stack so your team works from anywhere with secure, always-available productivity tools.",
     intro:
-      "From a first-time migration off legacy mail to a fully managed Microsoft 365 estate, we handle licensing, setup, security configuration, and day-to-day support as one accountable partner.",
+      "As Kenya's first Tier 1 Microsoft Cloud Solutions Provider, Eldama helps organisations transition from on-premise infrastructure to secure, scalable cloud productivity platforms. From a first-time migration off legacy mail to a fully managed Microsoft 365 estate, we handle licensing, setup, security configuration, and day-to-day support as one accountable partner.",
     icon: "m365",
     badge: "Microsoft Gold Partner",
-    badges: ["Microsoft Gold Partner", "Microsoft Certified"],
+    badges: [
+      "Microsoft Gold Partner",
+      "Tier 1 Microsoft Cloud Solutions Provider",
+      "Microsoft Certified",
+    ],
     tools: [
       {
         name: "Microsoft 365 Business",
@@ -98,6 +105,16 @@ export const services: Service[] = [
         name: "Entra ID & Intune",
         description:
           "Identity and device management — single sign-on, multi-factor authentication, and conditional access policies that protect every login.",
+      },
+      {
+        name: "SharePoint Intranets",
+        description:
+          "Centralised document storage, workflows and collaboration.",
+      },
+      {
+        name: "Hosted Communications",
+        description:
+          "Email, VoIP, video conferencing and messaging.",
       },
     ],
     clientProof: [
@@ -144,6 +161,16 @@ export const services: Service[] = [
         description:
           "We broker and manage business internet and voice lines, negotiating the right circuits and keeping connectivity resilient.",
       },
+      {
+        name: "Cambium Networks",
+        description:
+          "Carrier-grade wireless and Wi-Fi solutions for offices, campuses, and wide-area links.",
+      },
+      {
+        name: "Infrastructure Management",
+        description:
+          "Day-to-day management of servers, networks, and security infrastructure — monitored, patched, and maintained by our engineers.",
+      },
     ],
     clientProof: [
       { client: "Mace Group", line: "Full IT outsourcing and helpdesk" },
@@ -164,6 +191,11 @@ export const services: Service[] = [
     badge: "Webroot, Cynet & Sophos Partner",
     badges: ["Webroot Partner", "Cynet Partner", "Sophos Partner"],
     tools: [
+      {
+        name: "Cyber Threat Assessments (CTAP)",
+        description:
+          "Basic and Advanced security audits identifying vulnerabilities.",
+      },
       {
         name: "Webroot",
         description:
@@ -228,6 +260,16 @@ export const services: Service[] = [
         name: "Cove backup",
         description:
           "Cloud backup for servers, workstations, and Microsoft 365 — automated, monitored, and tested by our team.",
+      },
+      {
+        name: "Private Cloud",
+        description:
+          "Fully managed hosting environments.",
+      },
+      {
+        name: "Virtualization",
+        description:
+          "Hyper-V based server consolidation and optimisation.",
       },
     ],
     clientProof: [
@@ -294,6 +336,8 @@ export const partnerBadges = [
   "Webroot",
   "Datto",
   "Check Point",
+  "Cambium Networks",
+  "Telco Systems",
 ];
 
 export interface ClientLogo {

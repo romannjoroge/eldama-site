@@ -11,9 +11,7 @@ export function Footer() {
           <div>
             <Logo variant="light" />
             <p className="mt-4 max-w-sm text-sm leading-relaxed text-navy-300">
-              {company.name} is the outsourced IT department for growing
-              businesses — one certified partner for Microsoft 365, networking,
-              security, cloud, and email.
+              {company.description}
             </p>
             <div className="mt-5 flex flex-wrap gap-2">
               {partnerBadges.map((badge) => (
@@ -99,7 +97,7 @@ export function Footer() {
 
         <div className="mt-12 flex flex-col gap-3 border-t border-white/10 pt-6 text-xs text-navy-400 sm:flex-row sm:items-center sm:justify-between">
           <p>
-            © {new Date().getFullYear()} {company.name}. All rights reserved.
+            © {new Date().getFullYear()} {company.legalName}. All rights reserved.
           </p>
           <p>Certified partners across Microsoft, security, networking & cloud.</p>
         </div>
