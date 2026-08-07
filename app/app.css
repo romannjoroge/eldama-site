@@ -17,15 +17,16 @@
   --color-navy-900: #0e1f3d;
   --color-navy-950: #08142b;
 
-  /* Brand accent: high-contrast CTA orange */
-  --color-accent-50: #fff7ed;
-  --color-accent-100: #ffedd5;
-  --color-accent-200: #fed7aa;
-  --color-accent-300: #fdba74;
-  --color-accent-400: #fb923c;
-  --color-accent-500: #f97316;
-  --color-accent-600: #ea580c;
-  --color-accent-700: #c2410c;
+  /* Brand accent: navy blue (matches primary; swap this scale for a
+     teal/bright-blue accent later if the client wants one) */
+  --color-accent-50: #f2f6fb;
+  --color-accent-100: #e3ebf6;
+  --color-accent-200: #c3d4ea;
+  --color-accent-300: #93b1d8;
+  --color-accent-400: #5d88c0;
+  --color-accent-500: #3a68a6;
+  --color-accent-600: #2b5089;
+  --color-accent-700: #203f6e;
 }
 
 html,
