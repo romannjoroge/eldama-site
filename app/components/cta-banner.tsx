@@ -15,33 +15,21 @@ export function CtaBanner({
   const { openQuote } = useQuote();
 
   return (
-    <section className="bg-white py-20 sm:py-24">
+    <section className="bg-canvas py-16 sm:py-20">
       <div className="container-site">
-        <div className="relative overflow-hidden rounded-2xl bg-navy-900 px-6 py-14 text-center text-white sm:px-12 sm:py-16">
-          <div
-            aria-hidden="true"
-            className="absolute -right-16 -top-16 h-64 w-64 rounded-full bg-accent-500/20 blur-3xl"
-          />
-          <div
-            aria-hidden="true"
-            className="absolute -bottom-20 -left-16 h-64 w-64 rounded-full bg-navy-500/40 blur-3xl"
-          />
-          <div className="relative">
-            <h2 className="mx-auto max-w-2xl text-3xl font-extrabold tracking-tight sm:text-4xl">
-              {heading}
-            </h2>
-            <p className="mx-auto mt-4 max-w-xl text-lg leading-relaxed text-navy-200">
-              {body}
-            </p>
-            <button
-              type="button"
-              onClick={() => openQuote(serviceSlugs)}
-              className="btn-primary mt-8"
-            >
-              {buttonLabel}
-              <Icon name="arrow" className="h-4 w-4" />
-            </button>
-          </div>
+        <div className="rounded-md border border-hairline bg-surface-soft px-6 py-12 text-center sm:px-12 sm:py-16">
+          <h2 className="h-section mx-auto max-w-2xl">{heading}</h2>
+          <p className="mx-auto mt-4 max-w-xl text-lg leading-relaxed text-body">
+            {body}
+          </p>
+          <button
+            type="button"
+            onClick={() => openQuote(serviceSlugs)}
+            className="btn-primary mt-8"
+          >
+            {buttonLabel}
+            <Icon name="arrow" className="h-4 w-4" />
+          </button>
         </div>
       </div>
     </section>

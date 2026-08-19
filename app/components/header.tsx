@@ -11,8 +11,8 @@ export function Header() {
   const { openQuote } = useQuote();
 
   return (
-    <header className="sticky top-0 z-40 border-b border-navy-100 bg-white/95 backdrop-blur">
-      <div className="container-site flex h-16 items-center justify-between gap-4">
+    <header className="sticky top-0 z-40 border-b border-hairline bg-white/95 backdrop-blur">
+      <div className="container-site flex h-14 items-center justify-between gap-4">
         <Logo />
 
         <nav aria-label="Primary" className="hidden lg:block">
@@ -22,10 +22,10 @@ export function Header() {
                 <NavLink
                   to={link.href}
                   className={({ isActive }) =>
-                    `rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                    `rounded-md px-3 py-2 text-sm font-semibold transition-colors ${
                       isActive
-                        ? "bg-navy-50 text-navy-900"
-                        : "text-navy-600 hover:bg-navy-50 hover:text-navy-900"
+                        ? "bg-surface-soft text-ink"
+                        : "text-body hover:bg-surface-soft hover:text-ink"
                     }`
                   }
                 >
@@ -40,7 +40,7 @@ export function Header() {
           <button
             type="button"
             onClick={() => openQuote()}
-            className="btn-primary hidden sm:inline-flex"
+            className="btn-primary btn-pill hidden sm:inline-flex"
           >
             Get a Quote
           </button>
@@ -50,7 +50,7 @@ export function Header() {
             aria-expanded={menuOpen}
             aria-controls="mobile-menu"
             aria-label={menuOpen ? "Close menu" : "Open menu"}
-            className="flex h-10 w-10 items-center justify-center rounded-lg text-navy-700 transition-colors hover:bg-navy-50 lg:hidden"
+            className="flex h-10 w-10 items-center justify-center rounded-md text-body transition-colors hover:bg-surface-soft lg:hidden"
           >
             <Icon name={menuOpen ? "close" : "menu"} className="h-6 w-6" />
           </button>
@@ -61,7 +61,7 @@ export function Header() {
         <nav
           id="mobile-menu"
           aria-label="Mobile"
-          className="border-t border-navy-100 bg-white lg:hidden"
+          className="border-t border-hairline bg-white lg:hidden"
         >
           <ul className="container-site space-y-1 py-3">
             {navLinks.map((link) => (
@@ -70,10 +70,10 @@ export function Header() {
                   to={link.href}
                   onClick={() => setMenuOpen(false)}
                   className={({ isActive }) =>
-                    `block rounded-lg px-3 py-2.5 text-sm font-medium ${
+                    `block rounded-md px-3 py-2.5 text-sm font-semibold ${
                       isActive
-                        ? "bg-navy-50 text-navy-900"
-                        : "text-navy-700 hover:bg-navy-50"
+                        ? "bg-surface-soft text-ink"
+                        : "text-body hover:bg-surface-soft"
                     }`
                   }
                 >
