@@ -13,18 +13,18 @@ export function meta({}: Route.MetaArgs) {
 
 export default function Catchall() {
   return (
-    <section className="bg-navy-50/60 py-24 sm:py-32">
+    <section className="bg-cloud py-24 sm:py-32">
       <div className="container-site max-w-xl text-center">
         <p className="eyebrow">404</p>
-        <h1 className="mt-3 text-4xl font-extrabold tracking-tight text-navy-900">
+        <h1 className="h-section mt-3">
           This page went offline
         </h1>
-        <p className="mt-4 text-lg leading-relaxed text-navy-600">
+        <p className="mt-4 text-lg leading-relaxed text-charcoal">
           The page you're looking for doesn't exist. Try one of our service
           pages, or get a quote directly.
         </p>
         <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-          <Link to="/" className="btn-dark">
+          <Link to="/" className="btn-ink">
             Back to home
           </Link>
           <Link to="/quote" className="btn-primary">

@@ -57,14 +57,12 @@ export default function QuotePage({ loaderData }: Route.ComponentProps) {
   const { preselectedSlugs } = loaderData;
 
   return (
-    <section className="bg-navy-50/60 py-16 sm:py-20">
+    <section className="bg-cloud section-pad">
       <div className="container-site grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
         <div className="lg:sticky lg:top-24">
           <p className="eyebrow">Get a Quote</p>
-          <h1 className="mt-3 text-3xl font-extrabold tracking-tight text-navy-900 sm:text-4xl">
-            A tailored quote, fast
-          </h1>
-          <p className="mt-4 text-lg leading-relaxed text-navy-600">
+          <h1 className="h-section mt-3">A tailored quote, fast</h1>
+          <p className="mt-4 text-lg leading-relaxed text-charcoal">
             Skip the procurement maze. Tell us what you need and a certified
             specialist will come back within {formatResponseTime()} with scope,
             recommendations, and pricing.
@@ -88,15 +86,15 @@ export default function QuotePage({ loaderData }: Route.ComponentProps) {
             />
           </ul>
 
-          <div className="mt-10 rounded-2xl border border-navy-100 bg-white p-5">
-            <p className="text-xs font-bold uppercase tracking-wider text-navy-500">
+          <div className="mt-10 rounded-[16px] border border-hairline bg-white p-5">
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-graphite">
               Certified partner of
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
               {partnerBadges.slice(0, 6).map((badge) => (
                 <span
                   key={badge}
-                  className="rounded-md border border-navy-100 bg-navy-50 px-2.5 py-1 text-xs font-semibold text-navy-700"
+                  className="rounded-[8px] border border-hairline bg-cloud px-2.5 py-1 text-[12px] font-medium text-charcoal"
                 >
                   {badge}
                 </span>
@@ -136,12 +134,12 @@ function Step({
 }) {
   return (
     <li className="flex items-start gap-4">
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-navy-900 text-accent-400">
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[8px] bg-ink text-white">
         <Icon name={icon} className="h-5 w-5" />
       </span>
       <div>
-        <p className="font-semibold text-navy-900">{title}</p>
-        <p className="mt-1 text-sm leading-relaxed text-navy-600">{body}</p>
+        <p className="font-semibold text-ink">{title}</p>
+        <p className="mt-1 text-[14px] leading-relaxed text-charcoal">{body}</p>
       </div>
     </li>
   );

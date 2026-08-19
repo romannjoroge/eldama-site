@@ -5,14 +5,14 @@ import { clients, services } from "~/data/site";
 
 export function ClientProof() {
   return (
-    <section id="clients" className="bg-white py-20 sm:py-24">
+    <section id="clients" className="bg-cloud section-pad">
       <div className="container-site">
         <div className="mx-auto max-w-2xl text-center">
           <p className="eyebrow">Client proof</p>
-          <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-navy-900 sm:text-4xl">
+          <h2 className="h-section mt-3">
             Trusted by organisations that can't afford downtime
           </h2>
-          <p className="mt-4 text-lg leading-relaxed text-navy-600">
+          <p className="mt-4 text-lg leading-relaxed text-charcoal">
             From construction groups to hospitals to retail, we run the IT that
             keeps their people productive and their operations secure.
           </p>
@@ -26,23 +26,23 @@ export function ClientProof() {
             return (
               <li key={client.name} className="card p-6">
                 <div className="flex items-center gap-3">
-                  <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-navy-900 text-lg font-extrabold text-white">
+                  <span className="flex h-11 w-11 items-center justify-center rounded-[4px] bg-ink text-lg font-bold text-white">
                     {client.name.charAt(0)}
                   </span>
                   <div>
-                    <p className="font-bold tracking-tight text-navy-900">
+                    <p className="text-[16px] font-semibold text-ink">
                       {client.name}
                     </p>
-                    <p className="text-xs text-navy-500">Client</p>
+                    <p className="text-[12px] text-graphite">Client</p>
                   </div>
                 </div>
-                <p className="mt-4 text-sm leading-relaxed text-navy-600">
+                <p className="mt-4 text-[15px] leading-relaxed text-charcoal">
                   {client.proof}
                 </p>
                 {related && (
                   <Link
                     to={`/services/${related.slug}`}
-                    className="link-arrow mt-4"
+                    className="link-arrow mt-5"
                   >
                     See how
                     <Icon name="arrow" className="h-4 w-4" />
