@@ -3,37 +3,40 @@ import { stats, whyEldama } from "~/data/site";
 
 export function WhyEldama() {
   return (
-    <section id="why-eldama" className="bg-navy-50/60 py-20 sm:py-24">
+    <section id="why-eldama" className="bg-parchment py-16 sm:py-24">
       <div className="container-site">
         <div className="mx-auto max-w-2xl text-center">
           <p className="eyebrow">Why Eldama</p>
-          <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-navy-900 sm:text-4xl">
+          <h2 className="display-lg mt-3 text-ink">
             Enterprise-grade IT, without the enterprise IT budget
           </h2>
-          <p className="mt-4 text-lg leading-relaxed text-navy-600">
+          <p className="lead mt-4 text-ink-muted-80">
             Procurement teams choose us for one reason: we remove the complexity
             of running technology, with certified expertise behind every
             service.
           </p>
         </div>
 
-        <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {whyEldama.map((item) => (
-            <article key={item.title} className="card p-6">
-              <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-navy-900 text-accent-400">
+            <article
+              key={item.title}
+              className="rounded-lg border border-hairline bg-white p-6"
+            >
+              <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-parchment text-ink">
                 <Icon name={item.icon} className="h-6 w-6" />
               </span>
-              <h3 className="mt-4 text-base font-bold tracking-tight text-navy-900">
+              <h3 className="mt-4 text-[17px] font-semibold leading-[1.24] tracking-[-0.374px] text-ink">
                 {item.title}
               </h3>
-              <p className="mt-2 text-sm leading-relaxed text-navy-600">
+              <p className="mt-2 text-[15px] leading-[1.47] tracking-[-0.224px] text-ink-muted-80">
                 {item.body}
               </p>
             </article>
           ))}
         </div>
 
-        <dl className="mt-14 grid grid-cols-2 gap-6 rounded-2xl border border-navy-100 bg-white p-8 sm:p-10 lg:grid-cols-4">
+        <dl className="mt-14 grid grid-cols-2 gap-x-4 gap-y-8 border-t border-hairline pt-10 text-center lg:grid-cols-4">
           <Stat value={`${stats.yearsInBusiness}+`} label="Years in business" />
           <Stat
             value={`${stats.certificationsHeld}`}
@@ -49,11 +52,13 @@ export function WhyEldama() {
 
 function Stat({ value, label }: { value: string; label: string }) {
   return (
-    <div className="text-center">
-      <dd className="text-3xl font-extrabold tracking-tight text-navy-900 sm:text-4xl">
+    <div>
+      <dd className="font-display text-[30px] font-semibold leading-[1.1] tracking-[-0.28px] text-ink sm:text-[40px]">
         {value}
       </dd>
-      <dt className="mt-1 text-sm text-navy-500">{label}</dt>
+      <dt className="mt-1 text-xs tracking-[-0.12px] text-ink-muted-48">
+        {label}
+      </dt>
     </div>
   );
 }

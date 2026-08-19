@@ -10,7 +10,6 @@ import {
 import type { Route } from "./+types/root";
 import { Footer } from "./components/footer";
 import { Header } from "./components/header";
-import { Icon } from "./components/icons";
 import { QuoteProvider, useQuote } from "./components/quote-modal";
 import "./app.css";
 
@@ -77,14 +76,12 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-navy-50/60 px-4 py-20">
-      <div className="w-full max-w-md rounded-2xl border border-navy-100 bg-white p-8 text-center shadow-sm">
-        <h1 className="text-3xl font-extrabold tracking-tight text-navy-900">
-          {message}
-        </h1>
-        <p className="mt-3 text-navy-600">{details}</p>
+    <main className="flex min-h-screen items-center justify-center bg-parchment px-4 py-20">
+      <div className="w-full max-w-md rounded-lg border border-hairline bg-white p-8 text-center">
+        <h1 className="display-md text-ink">{message}</h1>
+        <p className="mt-3 text-ink-muted-80">{details}</p>
         {stack && (
-          <pre className="mt-4 overflow-x-auto rounded-lg bg-navy-50 p-4 text-left text-xs text-navy-700">
+          <pre className="mt-4 overflow-x-auto rounded-lg bg-parchment p-4 text-left text-xs text-ink-muted-80">
             <code>{stack}</code>
           </pre>
         )}
@@ -96,14 +93,13 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
 function MobileQuoteBar() {
   const { openQuote } = useQuote();
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-navy-100 bg-white/95 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur md:hidden">
+    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-hairline bg-parchment/90 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-xl md:hidden">
       <button
         type="button"
         onClick={() => openQuote()}
         className="btn-primary w-full"
       >
         Get a Quote
-        <Icon name="arrow" className="h-4 w-4" />
       </button>
     </div>
   );

@@ -35,48 +35,46 @@ export default function ServicePage({ loaderData }: Route.ComponentProps) {
   return (
     <>
       {/* Header */}
-      <section className="relative overflow-hidden bg-navy-950 text-white">
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.045)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.045)_1px,transparent_1px)] bg-[size:44px_44px]"
-        />
-        <div
-          aria-hidden="true"
-          className="absolute -right-24 -top-24 h-96 w-96 rounded-full bg-accent-500/15 blur-3xl"
-        />
-        <div className="container-site relative py-16 sm:py-20">
-          <nav aria-label="Breadcrumb" className="text-xs text-navy-300">
+      <section className="bg-tile-1 py-16 text-white sm:py-20">
+        <div className="container-site">
+          <nav
+            aria-label="Breadcrumb"
+            className="text-xs tracking-[-0.12px] text-body-muted"
+          >
             <Link to="/" className="transition-colors hover:text-white">
               Home
             </Link>
             <span className="mx-1.5" aria-hidden="true">
               /
             </span>
-            <span className="text-navy-100">Services</span>
+            <span className="text-white/80">Services</span>
           </nav>
 
-          <div className="mt-6 flex flex-wrap gap-2">
+          <div className="mt-8 flex flex-wrap gap-2">
             {service.badges.map((badge) => (
               <span
                 key={badge}
-                className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-semibold text-navy-100"
+                className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs tracking-[-0.12px] text-white"
               >
-                <Icon name="certificate" className="h-3.5 w-3.5 text-accent-400" />
+                <Icon
+                  name="certificate"
+                  className="h-3.5 w-3.5 text-primary-on-dark"
+                />
                 {badge}
               </span>
             ))}
           </div>
 
-          <div className="mt-5 flex items-center gap-4">
-            <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-accent-500/15 text-accent-400">
+          <div className="mt-6 flex items-center gap-4">
+            <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-white/10 text-white">
               <Icon name={service.icon} className="h-7 w-7" />
             </span>
-            <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl">
+            <h1 className="display-lg text-white">
               {service.name}
             </h1>
           </div>
 
-          <p className="mt-5 max-w-2xl text-lg leading-relaxed text-navy-200">
+          <p className="lead mt-6 max-w-2xl text-body-muted">
             {service.intro}
           </p>
 
@@ -87,9 +85,8 @@ export default function ServicePage({ loaderData }: Route.ComponentProps) {
               className="btn-primary"
             >
               Get a Quote for {service.name}
-              <Icon name="arrow" className="h-4 w-4" />
             </button>
-            <a href="/#services" className="btn-secondary">
+            <a href="/#services" className="btn-secondary-dark">
               See all services
             </a>
           </div>
@@ -97,31 +94,31 @@ export default function ServicePage({ loaderData }: Route.ComponentProps) {
       </section>
 
       {/* Body */}
-      <section className="bg-white py-16 sm:py-20">
+      <section className="bg-canvas py-16 sm:py-20">
         <div className="container-site grid gap-12 lg:grid-cols-[1fr_320px]">
           <div>
-            <p className="text-lg leading-relaxed text-navy-700">
+            <p className="text-[19px] leading-[1.47] tracking-[-0.374px] text-ink-muted-80">
               {service.description}
             </p>
 
-            <h2 className="mt-12 text-2xl font-extrabold tracking-tight text-navy-900">
+            <h2 className="display-md mt-14 text-ink">
               What we deliver
             </h2>
             <ul className="mt-6 grid gap-4 sm:grid-cols-2">
               {service.tools.map((tool) => (
                 <li
                   key={tool.name}
-                  className="card p-5"
+                  className="rounded-lg border border-hairline bg-white p-5"
                 >
                   <div className="flex items-start gap-3">
-                    <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent-500/15 text-accent-600">
+                    <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-parchment text-primary">
                       <Icon name="check" className="h-4 w-4" />
                     </span>
                     <div>
-                      <h3 className="text-sm font-bold tracking-tight text-navy-900">
+                      <h3 className="text-[17px] font-semibold leading-[1.24] tracking-[-0.374px] text-ink">
                         {tool.name}
                       </h3>
-                      <p className="mt-1.5 text-sm leading-relaxed text-navy-600">
+                      <p className="mt-1.5 text-sm leading-[1.47] tracking-[-0.224px] text-ink-muted-80">
                         {tool.description}
                       </p>
                     </div>
@@ -131,20 +128,25 @@ export default function ServicePage({ loaderData }: Route.ComponentProps) {
             </ul>
 
             {/* Client proof */}
-            <h2 className="mt-14 text-2xl font-extrabold tracking-tight text-navy-900">
+            <h2 className="display-md mt-14 text-ink">
               Who uses this service
             </h2>
             <ul className="mt-6 grid gap-4 sm:grid-cols-2">
               {service.clientProof.map((proof) => (
-                <li key={proof.client} className="card flex items-center gap-4 p-5">
-                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-navy-900 text-base font-extrabold text-white">
+                <li
+                  key={proof.client}
+                  className="flex items-center gap-4 rounded-lg border border-hairline bg-white p-5"
+                >
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-ink text-[17px] font-semibold text-white">
                     {proof.client.charAt(0)}
                   </span>
                   <div>
-                    <p className="font-bold tracking-tight text-navy-900">
+                    <p className="text-[17px] font-semibold leading-[1.24] tracking-[-0.374px] text-ink">
                       {proof.client}
                     </p>
-                    <p className="mt-0.5 text-sm text-navy-600">{proof.line}</p>
+                    <p className="mt-0.5 text-sm tracking-[-0.224px] text-ink-muted-80">
+                      {proof.line}
+                    </p>
                   </div>
                 </li>
               ))}
@@ -152,15 +154,15 @@ export default function ServicePage({ loaderData }: Route.ComponentProps) {
           </div>
 
           {/* Sticky CTA sidebar */}
-          <aside className="lg:pt-1">
-            <div className="card sticky top-24 p-6">
-              <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-navy-900 text-accent-400">
+          <aside className="lg:pt-2">
+            <div className="sticky top-32 rounded-lg border border-hairline bg-white p-6">
+              <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-parchment text-primary">
                 <Icon name="quote" className="h-6 w-6" />
               </span>
-              <h3 className="mt-4 text-lg font-bold tracking-tight text-navy-900">
+              <h3 className="mt-4 text-[19px] font-semibold leading-[1.24] tracking-[-0.374px] text-ink">
                 Get a tailored quote
               </h3>
-              <p className="mt-2 text-sm leading-relaxed text-navy-600">
+              <p className="mt-2 text-sm leading-[1.47] tracking-[-0.224px] text-ink-muted-80">
                 Tell us about your environment and a specialist will respond
                 within {formatResponseTime()} with scope and pricing.
               </p>
@@ -171,7 +173,7 @@ export default function ServicePage({ loaderData }: Route.ComponentProps) {
               >
                 Get a Quote for {service.shortName}
               </button>
-              <p className="mt-4 text-xs leading-relaxed text-navy-500">
+              <p className="mt-4 text-xs leading-[1.3] tracking-[-0.12px] text-ink-muted-48">
                 Certified partner for {service.badge}. No obligation.
               </p>
             </div>
@@ -180,27 +182,30 @@ export default function ServicePage({ loaderData }: Route.ComponentProps) {
       </section>
 
       {/* Cross-sell */}
-      <section className="bg-navy-50/60 py-16 sm:py-20">
+      <section className="bg-parchment py-16 sm:py-20">
         <div className="container-site">
           <p className="eyebrow">Complete IT coverage</p>
-          <h2 className="mt-3 text-2xl font-extrabold tracking-tight text-navy-900 sm:text-3xl">
+          <h2 className="display-md mt-3 text-ink">
             Businesses using {service.name} often also need…
           </h2>
-          <div className="mt-8 grid gap-5 md:grid-cols-3">
+          <div className="mt-8 grid gap-4 md:grid-cols-3">
             {crossSell.map((item) => (
-              <article key={item.slug} className="card flex flex-col p-6">
-                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-navy-900 text-accent-400">
+              <article
+                key={item.slug}
+                className="flex flex-col rounded-lg border border-hairline bg-white p-6"
+              >
+                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-parchment text-ink">
                   <Icon name={item.icon} className="h-5 w-5" />
                 </span>
-                <h3 className="mt-4 text-base font-bold tracking-tight text-navy-900">
+                <h3 className="mt-4 text-[17px] font-semibold leading-[1.24] tracking-[-0.374px] text-ink">
                   {item.name}
                 </h3>
-                <p className="mt-2 flex-1 text-sm leading-relaxed text-navy-600">
+                <p className="mt-2 flex-1 text-sm leading-[1.47] tracking-[-0.224px] text-ink-muted-80">
                   {item.tagline}
                 </p>
                 <Link
                   to={`/services/${item.slug}`}
-                  className="link-arrow mt-4"
+                  className="text-link-sm mt-5"
                 >
                   Learn more
                   <Icon name="arrow" className="h-4 w-4" />

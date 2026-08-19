@@ -57,20 +57,18 @@ export default function QuotePage({ loaderData }: Route.ComponentProps) {
   const { preselectedSlugs } = loaderData;
 
   return (
-    <section className="bg-navy-50/60 py-16 sm:py-20">
+    <section className="bg-parchment py-16 sm:py-24">
       <div className="container-site grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
-        <div className="lg:sticky lg:top-24">
+        <div className="lg:sticky lg:top-32">
           <p className="eyebrow">Get a Quote</p>
-          <h1 className="mt-3 text-3xl font-extrabold tracking-tight text-navy-900 sm:text-4xl">
-            A tailored quote, fast
-          </h1>
-          <p className="mt-4 text-lg leading-relaxed text-navy-600">
+          <h1 className="display-lg mt-3 text-ink">A tailored quote, fast</h1>
+          <p className="lead mt-4 text-ink-muted-80">
             Skip the procurement maze. Tell us what you need and a certified
             specialist will come back within {formatResponseTime()} with scope,
             recommendations, and pricing.
           </p>
 
-          <ul className="mt-8 space-y-4">
+          <ul className="mt-8 space-y-5">
             <Step
               icon="clock"
               title={`Response within ${formatResponseTime()}`}
@@ -88,15 +86,15 @@ export default function QuotePage({ loaderData }: Route.ComponentProps) {
             />
           </ul>
 
-          <div className="mt-10 rounded-2xl border border-navy-100 bg-white p-5">
-            <p className="text-xs font-bold uppercase tracking-wider text-navy-500">
+          <div className="mt-10 rounded-lg border border-hairline bg-white p-5">
+            <p className="caption-strong text-ink-muted-48">
               Certified partner of
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
               {partnerBadges.slice(0, 6).map((badge) => (
                 <span
                   key={badge}
-                  className="rounded-md border border-navy-100 bg-navy-50 px-2.5 py-1 text-xs font-semibold text-navy-700"
+                  className="rounded-full border border-hairline bg-parchment px-3 py-1 text-xs tracking-[-0.12px] text-ink-muted-80"
                 >
                   {badge}
                 </span>
@@ -105,7 +103,7 @@ export default function QuotePage({ loaderData }: Route.ComponentProps) {
           </div>
         </div>
 
-        <div className="card p-6 sm:p-8">
+        <div className="rounded-lg border border-hairline bg-white p-6 sm:p-8">
           <QuoteForm
             preselectedSlugs={preselectedSlugs}
             fetcherKey="quote-page"
@@ -136,12 +134,16 @@ function Step({
 }) {
   return (
     <li className="flex items-start gap-4">
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-navy-900 text-accent-400">
+      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-hairline bg-white text-primary">
         <Icon name={icon} className="h-5 w-5" />
       </span>
       <div>
-        <p className="font-semibold text-navy-900">{title}</p>
-        <p className="mt-1 text-sm leading-relaxed text-navy-600">{body}</p>
+        <p className="text-[17px] font-semibold leading-[1.24] tracking-[-0.374px] text-ink">
+          {title}
+        </p>
+        <p className="mt-1 text-[15px] leading-[1.47] tracking-[-0.224px] text-ink-muted-80">
+          {body}
+        </p>
       </div>
     </li>
   );

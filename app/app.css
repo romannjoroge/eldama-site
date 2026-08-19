@@ -1,46 +1,58 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif,
-    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  /* Apple-inspired design system (see DESIGN-apple.md).
+     Swap brand colors here; real logo/imagery assets come later. */
 
-  /* Brand primary: navy */
-  --color-navy-50: #f2f6fb;
-  --color-navy-100: #e3ebf6;
-  --color-navy-200: #c3d4ea;
-  --color-navy-300: #93b1d8;
-  --color-navy-400: #5d88c0;
-  --color-navy-500: #3a68a6;
-  --color-navy-600: #2b5089;
-  --color-navy-700: #203f6e;
-  --color-navy-800: #162e53;
-  --color-navy-900: #0e1f3d;
-  --color-navy-950: #08142b;
+  /* Typography */
+  --font-display: "SF Pro Display", "Inter", system-ui, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-text: "SF Pro Text", "Inter", system-ui, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", sans-serif;
 
-  /* Brand accent: navy blue (matches primary; swap this scale for a
-     teal/bright-blue accent later if the client wants one) */
-  --color-accent-50: #f2f6fb;
-  --color-accent-100: #e3ebf6;
-  --color-accent-200: #c3d4ea;
-  --color-accent-300: #93b1d8;
-  --color-accent-400: #5d88c0;
-  --color-accent-500: #3a68a6;
-  --color-accent-600: #2b5089;
-  --color-accent-700: #203f6e;
-}
+  /* Radius scale */
+  --radius-xs: 5px;
+  --radius-sm: 8px;
+  --radius-md: 11px;
+  --radius-lg: 18px;
 
-html,
-body {
-  @apply bg-white text-navy-900 antialiased;
-  color-scheme: light;
+  /* Single interactive accent — the only "click me" color in the system */
+  --color-primary: #0066cc;
+  --color-primary-focus: #0071e3;
+  --color-primary-on-dark: #2997ff;
+
+  /* Text */
+  --color-ink: #1d1d1f;
+  --color-body-muted: #cccccc;
+  --color-ink-muted-80: #333333;
+  --color-ink-muted-48: #7a7a7a;
+
+  /* Surfaces */
+  --color-canvas: #ffffff;
+  --color-parchment: #f5f5f7;
+  --color-pearl: #fafafc;
+  --color-tile-1: #272729;
+  --color-tile-2: #2a2a2c;
+  --color-tile-3: #252527;
+  --color-void: #000000;
+  --color-chip: #d2d2d7;
+
+  /* Hairlines */
+  --color-hairline: #e0e0e0;
+  --color-divider-soft: #f0f0f0;
 }
 
 html {
   scroll-behavior: smooth;
 }
 
+body {
+  @apply bg-canvas font-text text-[17px] font-normal leading-[1.47] tracking-[-0.374px] text-ink antialiased;
+  color-scheme: light;
+}
+
 ::selection {
-  @apply bg-accent-500/25 text-navy-950;
+  @apply bg-primary/20 text-ink;
 }
 
 /* Respect users who prefer reduced motion */
@@ -52,46 +64,102 @@ html {
 
 @layer components {
   .container-site {
-    @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
-  }
-
-  .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-accent-500 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-colors duration-150 hover:bg-accent-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-400 focus-visible:ring-offset-2;
-  }
-
-  .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-white/30 bg-white/10 px-5 py-3 text-sm font-semibold text-white backdrop-blur transition-colors duration-150 hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-400 focus-visible:ring-offset-2;
-  }
-
-  .btn-outline {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-navy-200 bg-white px-5 py-3 text-sm font-semibold text-navy-800 transition-colors duration-150 hover:border-navy-300 hover:bg-navy-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-400 focus-visible:ring-offset-2;
-  }
-
-  .btn-dark {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-navy-900 px-5 py-3 text-sm font-semibold text-white transition-colors duration-150 hover:bg-navy-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-400 focus-visible:ring-offset-2;
+    @apply mx-auto w-full max-w-[1440px] px-5 sm:px-8 lg:px-10;
   }
 
   .eyebrow {
-    @apply text-xs font-bold uppercase tracking-[0.18em] text-accent-600;
+    @apply text-xs font-semibold uppercase tracking-[0.08em] text-ink-muted-48;
   }
 
-  .h-display {
-    @apply text-4xl font-extrabold tracking-tight text-navy-900 sm:text-5xl;
+  /* Display type — SF-style 600 weight with negative tracking */
+  .hero-display {
+    @apply font-display text-[34px] font-semibold leading-[1.07] tracking-[-0.28px] sm:text-[40px] lg:text-[56px];
   }
 
-  .h-section {
-    @apply text-3xl font-extrabold tracking-tight text-navy-900 sm:text-4xl;
+  .display-lg {
+    @apply font-display text-[30px] font-semibold leading-[1.1] tracking-[-0.28px] sm:text-[40px];
   }
 
-  .card {
-    @apply rounded-xl border border-navy-100 bg-white shadow-sm;
+  .display-md {
+    @apply font-text text-[27px] font-semibold leading-[1.35] tracking-[-0.374px] sm:text-[34px] sm:leading-[1.47];
   }
 
+  .lead {
+    @apply font-display text-[21px] font-normal leading-[1.25] tracking-[0.196px] sm:text-[28px] sm:leading-[1.14];
+  }
+
+  .tagline {
+    @apply font-display text-[18px] font-semibold leading-[1.19] tracking-[0.231px] sm:text-[21px];
+  }
+
+  .caption {
+    @apply text-sm leading-[1.43] tracking-[-0.224px];
+  }
+
+  .caption-strong {
+    @apply text-sm font-semibold leading-[1.29] tracking-[-0.224px];
+  }
+
+  .fine-print {
+    @apply text-xs leading-none tracking-[-0.12px];
+  }
+
+  .dense-link {
+    @apply text-[17px] font-normal leading-[2.41] tracking-normal;
+  }
+
+  .nav-link {
+    @apply text-xs font-normal leading-none tracking-[-0.12px];
+  }
+
+  /* Buttons — pill CTAs + compact utility rects */
+  .btn-primary {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-primary px-[22px] py-[11px] text-[17px] font-normal leading-none text-white transition-[background-color,transform] duration-150 hover:bg-primary-focus active:scale-[0.95] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-focus disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .btn-primary-sm {
+    @apply inline-flex min-h-9 items-center justify-center gap-1.5 rounded-full bg-primary px-[15px] py-2 text-sm font-normal leading-none text-white transition-[background-color,transform] duration-150 hover:bg-primary-focus active:scale-[0.95] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-focus;
+  }
+
+  .btn-secondary {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-primary bg-transparent px-[22px] py-[11px] text-[17px] font-normal leading-none text-primary transition-[border-color,color,transform] duration-150 hover:border-primary-focus hover:text-primary-focus active:scale-[0.95] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-focus;
+  }
+
+  .btn-secondary-dark {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-white/30 bg-transparent px-[22px] py-[11px] text-[17px] font-normal leading-none text-white transition-[border-color,color,transform] duration-150 hover:border-white/60 hover:text-white active:scale-[0.95] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/70;
+  }
+
+  .btn-utility {
+    @apply inline-flex min-h-8 items-center justify-center gap-1.5 rounded-sm bg-ink px-[15px] py-2 text-sm font-normal leading-none text-white transition-[background-color,transform] duration-150 hover:bg-ink-muted-80 active:scale-[0.95] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-focus;
+  }
+
+  .btn-pearl {
+    @apply inline-flex min-h-8 items-center justify-center gap-1.5 rounded-md border-[3px] border-divider-soft bg-pearl px-[14px] py-2 text-sm font-normal leading-none text-ink-muted-80 transition-[background-color,color,transform] duration-150 hover:bg-white active:scale-[0.95] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-focus;
+  }
+
+  .text-link {
+    @apply inline-flex items-center gap-1.5 text-[17px] font-normal text-primary transition-colors duration-150 hover:text-primary-focus;
+  }
+
+  .text-link-sm {
+    @apply inline-flex items-center gap-1 text-sm font-normal tracking-[-0.224px] text-primary transition-colors duration-150 hover:text-primary-focus;
+  }
+
+  .text-link-on-dark {
+    @apply inline-flex items-center gap-1.5 text-[17px] font-normal text-primary-on-dark transition-colors duration-150 hover:text-white;
+  }
+
+  /* Cards & tiles */
+  .card-utility {
+    @apply rounded-lg border border-hairline bg-canvas p-6;
+  }
+
+  /* Form inputs — pill-shaped, 44px hit targets */
   .input {
-    @apply w-full rounded-lg border border-navy-200 bg-white px-3.5 py-2.5 text-sm text-navy-900 shadow-sm placeholder:text-navy-400 focus:border-accent-500 focus:outline-none focus:ring-2 focus:ring-accent-500/25;
+    @apply h-11 w-full rounded-full border border-hairline bg-canvas px-5 text-[17px] font-normal leading-none text-ink placeholder:text-ink-muted-48 focus:border-primary focus:outline-2 focus:outline-primary-focus;
   }
 
-  .link-arrow {
-    @apply inline-flex items-center gap-1.5 text-sm font-semibold text-accent-600 hover:text-accent-700;
+  .textarea {
+    @apply w-full rounded-lg border border-hairline bg-canvas px-5 py-3 text-[17px] font-normal leading-[1.47] text-ink placeholder:text-ink-muted-48 focus:border-primary focus:outline-2 focus:outline-primary-focus;
   }
 }
