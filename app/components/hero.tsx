@@ -6,38 +6,28 @@ export function Hero() {
   const { openQuote } = useQuote();
 
   return (
-    <section className="relative overflow-hidden bg-navy-950 text-white">
-      {/* subtle grid + glow, all CSS so it can be swapped later */}
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.045)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.045)_1px,transparent_1px)] bg-[size:44px_44px]"
-      />
-      <div
-        aria-hidden="true"
-        className="absolute -top-32 right-0 h-[480px] w-[480px] rounded-full bg-accent-500/15 blur-3xl"
-      />
-      <div
-        aria-hidden="true"
-        className="absolute -bottom-40 -left-24 h-[420px] w-[420px] rounded-full bg-navy-500/25 blur-3xl"
-      />
-
-      <div className="container-site relative grid gap-12 py-20 sm:py-24 lg:grid-cols-[1.15fr_0.85fr] lg:items-center lg:py-28">
+    <section className="bg-white">
+      <div className="container-site grid gap-12 py-16 sm:py-20 lg:grid-cols-[1.15fr_0.85fr] lg:items-center lg:py-24">
         <div>
-          <p className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wider text-navy-100">
-            <Icon name="certificate" className="h-4 w-4 text-accent-400" />
+          <p className="badge-pill">
+            <Icon name="certificate" className="h-4 w-4 text-primary" />
             Certified across every service we offer
           </p>
-          <h1 className="mt-6 text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl lg:text-[3.4rem]">
-            Your outsourced IT department,{" "}
-            <span className="text-accent-400">without the headcount.</span>
+          <h1 className="mt-6 text-4xl font-bold leading-[1.12] tracking-tight text-ink sm:text-5xl lg:text-[3.25rem]">
+            Your outsourced IT department, without the headcount.
           </h1>
-          <p className="mt-5 max-w-xl text-lg leading-relaxed text-navy-200">
+          <p className="mt-5 max-w-xl text-lg leading-relaxed text-body">
             Eldama is one certified partner for Microsoft 365, networking,
-            security, cloud, and email — so growing businesses get enterprise-grade
-            IT without building an in-house team or juggling five vendors.
+            security, cloud, and email — so growing businesses get
+            enterprise-grade IT without building an in-house team or juggling
+            five vendors.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <button type="button" onClick={() => openQuote()} className="btn-primary">
+            <button
+              type="button"
+              onClick={() => openQuote()}
+              className="btn-primary"
+            >
               Get a Quote
               <Icon name="arrow" className="h-4 w-4" />
             </button>
@@ -45,34 +35,54 @@ export function Hero() {
               See our services
             </a>
           </div>
-          <dl className="mt-10 grid max-w-md grid-cols-3 gap-4 border-t border-white/10 pt-6">
+
+          {/* Service finder pill — opens the quote flow from anywhere */}
+          <button
+            type="button"
+            onClick={() => openQuote()}
+            className="mt-10 flex h-16 w-full max-w-xl items-center gap-3 rounded-full border border-hairline bg-white pl-5 pr-2 text-left shadow-lift transition-shadow duration-150 hover:border-border-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink"
+          >
+            <span className="min-w-0 flex-1">
+              <span className="block text-xs font-semibold uppercase tracking-[0.08em] text-muted">
+                What does your business need?
+              </span>
+              <span className="block truncate text-sm text-muted-soft">
+                Microsoft 365, firewall, backup, email security…
+              </span>
+            </span>
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary text-white">
+              <Icon name="arrow" className="h-5 w-5" />
+            </span>
+          </button>
+
+          <dl className="mt-10 grid max-w-md grid-cols-3 divide-x divide-hairline-soft">
             <Stat value="15+" label="Years in business" />
             <Stat value="12" label="Certifications held" />
             <Stat value="200+" label="Clients served" />
           </dl>
         </div>
 
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur sm:p-8">
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-accent-400">
+        <div className="rounded-card border border-hairline-soft bg-white p-6 shadow-lift sm:p-8">
+          <p className="text-xs font-bold uppercase tracking-[0.08em] text-muted">
             One partner. Five disciplines.
           </p>
-          <ul className="mt-5 space-y-2.5">
+          <ul className="mt-5 space-y-2">
             {services.map((service) => (
               <li
                 key={service.slug}
-                className="flex items-center gap-3 rounded-xl border border-white/10 bg-navy-900/50 px-4 py-3"
+                className="flex items-center gap-3 rounded-card border border-hairline-soft bg-surface-soft/60 px-4 py-3"
               >
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent-500/15 text-accent-400">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white text-ink">
                   <Icon name={service.icon} className="h-5 w-5" />
                 </span>
-                <span className="text-sm font-semibold text-white">
+                <span className="text-sm font-semibold text-ink">
                   {service.name}
                 </span>
-                <Icon name="check" className="ml-auto h-4 w-4 text-emerald-400" />
+                <Icon name="check" className="ml-auto h-4 w-4 text-muted" />
               </li>
             ))}
           </ul>
-          <p className="mt-5 text-sm leading-relaxed text-navy-300">
+          <p className="mt-5 text-sm leading-relaxed text-body">
             One team designs, deploys, secures, and supports the whole stack —
             and one team answers when something breaks.
           </p>
@@ -84,10 +94,10 @@ export function Hero() {
 
 function Stat({ value, label }: { value: string; label: string }) {
   return (
-    <div>
+    <div className="px-4 first:pl-0 last:pr-0">
       <dt className="sr-only">{label}</dt>
-      <dd className="text-2xl font-extrabold text-white">{value}</dd>
-      <dd className="mt-0.5 text-xs text-navy-300">{label}</dd>
+      <dd className="text-2xl font-bold text-ink">{value}</dd>
+      <dd className="mt-0.5 text-xs text-muted">{label}</dd>
     </div>
   );
 }

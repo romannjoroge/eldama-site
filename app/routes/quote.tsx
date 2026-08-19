@@ -5,11 +5,7 @@ import {
   QuoteForm,
   type QuoteFormResult,
 } from "~/components/quote-form";
-import {
-  formatResponseTime,
-  getService,
-  partnerBadges,
-} from "~/data/site";
+import { formatResponseTime, getService, partnerBadges } from "~/data/site";
 
 export function loader({ request }: Route.LoaderArgs) {
   const url = new URL(request.url);
@@ -24,9 +20,7 @@ export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
   const name = String(formData.get("name") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim();
-  const selected = formData
-    .getAll("services")
-    .map((value) => String(value));
+  const selected = formData.getAll("services").map((value) => String(value));
 
   if (!name || !email || selected.length === 0) {
     return {
@@ -57,14 +51,14 @@ export default function QuotePage({ loaderData }: Route.ComponentProps) {
   const { preselectedSlugs } = loaderData;
 
   return (
-    <section className="bg-navy-50/60 py-16 sm:py-20">
+    <section className="bg-surface-soft py-16 sm:py-20">
       <div className="container-site grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
         <div className="lg:sticky lg:top-24">
           <p className="eyebrow">Get a Quote</p>
-          <h1 className="mt-3 text-3xl font-extrabold tracking-tight text-navy-900 sm:text-4xl">
+          <h1 className="mt-3 text-3xl font-bold tracking-tight text-ink sm:text-4xl">
             A tailored quote, fast
           </h1>
-          <p className="mt-4 text-lg leading-relaxed text-navy-600">
+          <p className="mt-4 text-lg leading-relaxed text-body">
             Skip the procurement maze. Tell us what you need and a certified
             specialist will come back within {formatResponseTime()} with scope,
             recommendations, and pricing.
@@ -88,16 +82,13 @@ export default function QuotePage({ loaderData }: Route.ComponentProps) {
             />
           </ul>
 
-          <div className="mt-10 rounded-2xl border border-navy-100 bg-white p-5">
-            <p className="text-xs font-bold uppercase tracking-wider text-navy-500">
+          <div className="mt-10 rounded-card border border-hairline bg-white p-5">
+            <p className="text-xs font-bold uppercase tracking-[0.08em] text-muted">
               Certified partner of
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
               {partnerBadges.slice(0, 6).map((badge) => (
-                <span
-                  key={badge}
-                  className="rounded-md border border-navy-100 bg-navy-50 px-2.5 py-1 text-xs font-semibold text-navy-700"
-                >
+                <span key={badge} className="badge-pill">
                   {badge}
                 </span>
               ))}
@@ -105,7 +96,7 @@ export default function QuotePage({ loaderData }: Route.ComponentProps) {
           </div>
         </div>
 
-        <div className="card p-6 sm:p-8">
+        <div className="rounded-card border border-hairline bg-white p-6 shadow-lift sm:p-8">
           <QuoteForm
             preselectedSlugs={preselectedSlugs}
             fetcherKey="quote-page"
@@ -136,12 +127,12 @@ function Step({
 }) {
   return (
     <li className="flex items-start gap-4">
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-navy-900 text-accent-400">
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-card border border-hairline bg-white text-ink">
         <Icon name={icon} className="h-5 w-5" />
       </span>
       <div>
-        <p className="font-semibold text-navy-900">{title}</p>
-        <p className="mt-1 text-sm leading-relaxed text-navy-600">{body}</p>
+        <p className="font-semibold text-ink">{title}</p>
+        <p className="mt-1 text-sm leading-relaxed text-body">{body}</p>
       </div>
     </li>
   );

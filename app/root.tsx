@@ -77,14 +77,14 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-navy-50/60 px-4 py-20">
-      <div className="w-full max-w-md rounded-2xl border border-navy-100 bg-white p-8 text-center shadow-sm">
-        <h1 className="text-3xl font-extrabold tracking-tight text-navy-900">
+    <main className="flex min-h-screen items-center justify-center bg-surface-soft px-4 py-20">
+      <div className="w-full max-w-md rounded-card border border-hairline bg-white p-8 text-center shadow-lift">
+        <h1 className="text-3xl font-bold tracking-tight text-ink">
           {message}
         </h1>
-        <p className="mt-3 text-navy-600">{details}</p>
+        <p className="mt-3 text-body">{details}</p>
         {stack && (
-          <pre className="mt-4 overflow-x-auto rounded-lg bg-navy-50 p-4 text-left text-xs text-navy-700">
+          <pre className="mt-4 overflow-x-auto rounded-lg bg-surface-soft p-4 text-left text-xs text-body">
             <code>{stack}</code>
           </pre>
         )}
@@ -96,7 +96,7 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
 function MobileQuoteBar() {
   const { openQuote } = useQuote();
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-navy-100 bg-white/95 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur md:hidden">
+    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-hairline bg-white p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:hidden">
       <button
         type="button"
         onClick={() => openQuote()}

@@ -1,10 +1,13 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif,
-    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    Roboto, "Helvetica Neue", sans-serif;
 
-  /* Brand primary: navy */
+  /* Airbnb-style layout system — pure white canvas, ink text, one brand
+     accent for every primary CTA. The accent is Eldama navy. */
+
+  /* Brand navy scale */
   --color-navy-50: #f2f6fb;
   --color-navy-100: #e3ebf6;
   --color-navy-200: #c3d4ea;
@@ -17,21 +20,37 @@
   --color-navy-900: #0e1f3d;
   --color-navy-950: #08142b;
 
-  /* Brand accent: navy blue (matches primary; swap this scale for a
-     teal/bright-blue accent later if the client wants one) */
-  --color-accent-50: #f2f6fb;
-  --color-accent-100: #e3ebf6;
-  --color-accent-200: #c3d4ea;
-  --color-accent-300: #93b1d8;
-  --color-accent-400: #5d88c0;
-  --color-accent-500: #3a68a6;
-  --color-accent-600: #2b5089;
-  --color-accent-700: #203f6e;
+  --color-canvas: #ffffff;
+  --color-ink: #222222;
+  --color-body: #3f3f3f;
+  --color-muted: #6a6a6a;
+  --color-muted-soft: #929292;
+  --color-hairline: #dddddd;
+  --color-hairline-soft: #ebebeb;
+  --color-border-strong: #c1c1c1;
+  --color-surface-soft: #f7f7f7;
+  --color-surface-strong: #f2f2f2;
+  /* Single brand accent — Eldama navy. Swap these three lines to change the
+     accent color sitewide. */
+  --color-primary: #162e53;
+  --color-primary-active: #0e1f3d;
+  --color-primary-disabled: #d7dee9;
+  --color-error: #c13515;
+  --color-error-hover: #b32505;
+  --color-legal-link: #428bff;
+
+  /* Card radius ~14px, matching the design system's rounded.md */
+  --radius-card: 14px;
+
+  /* The single elevation tier in the system (cards on hover, dialogs,
+     reservation-style sidebars). No progressive shadows. */
+  --shadow-lift: 0 0 0 1px rgba(0, 0, 0, 0.02),
+    0 2px 6px 0 rgba(0, 0, 0, 0.04), 0 4px 8px 0 rgba(0, 0, 0, 0.1);
 }
 
 html,
 body {
-  @apply bg-white text-navy-900 antialiased;
+  @apply bg-canvas text-ink antialiased;
   color-scheme: light;
 }
 
@@ -40,7 +59,7 @@ html {
 }
 
 ::selection {
-  @apply bg-accent-500/25 text-navy-950;
+  @apply bg-primary/15 text-ink;
 }
 
 /* Respect users who prefer reduced motion */
@@ -55,43 +74,65 @@ html {
     @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
   }
 
+  /* Primary CTA — navy fill, 8px radius, 48px height, weight 500. */
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-accent-500 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-colors duration-150 hover:bg-accent-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-400 focus-visible:ring-offset-2;
+    @apply inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-primary px-6 text-base font-medium text-white transition-colors duration-150 hover:bg-primary-active focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2;
   }
 
+  /* Secondary CTA — white fill, ink outline, same geometry. */
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-white/30 bg-white/10 px-5 py-3 text-sm font-semibold text-white backdrop-blur transition-colors duration-150 hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-400 focus-visible:ring-offset-2;
-  }
-
-  .btn-outline {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-navy-200 bg-white px-5 py-3 text-sm font-semibold text-navy-800 transition-colors duration-150 hover:border-navy-300 hover:bg-navy-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-400 focus-visible:ring-offset-2;
+    @apply inline-flex h-12 items-center justify-center gap-2 rounded-lg border border-ink bg-white px-6 text-base font-medium text-ink transition-colors duration-150 hover:bg-surface-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2;
   }
 
   .btn-dark {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-navy-900 px-5 py-3 text-sm font-semibold text-white transition-colors duration-150 hover:bg-navy-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-400 focus-visible:ring-offset-2;
+    @apply inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-ink px-6 text-base font-medium text-white transition-colors duration-150 hover:bg-body focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2;
+  }
+
+  /* Featured pill CTA — rounded-full navy, used sparingly. */
+  .btn-pill {
+    @apply inline-flex h-12 items-center justify-center gap-2 rounded-full bg-primary px-7 text-base font-medium text-white transition-colors duration-150 hover:bg-primary-active focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2;
+  }
+
+  /* Inverse pill CTA — white fill on dark navy surfaces. */
+  .btn-pill-light {
+    @apply inline-flex h-12 items-center justify-center gap-2 rounded-full bg-white px-7 text-base font-medium text-navy-900 transition-colors duration-150 hover:bg-surface-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2;
   }
 
   .eyebrow {
-    @apply text-xs font-bold uppercase tracking-[0.18em] text-accent-600;
-  }
-
-  .h-display {
-    @apply text-4xl font-extrabold tracking-tight text-navy-900 sm:text-5xl;
+    @apply text-xs font-bold uppercase tracking-[0.08em] text-muted;
   }
 
   .h-section {
-    @apply text-3xl font-extrabold tracking-tight text-navy-900 sm:text-4xl;
+    @apply text-[1.75rem] font-bold leading-tight tracking-tight text-ink sm:text-4xl;
   }
 
   .card {
-    @apply rounded-xl border border-navy-100 bg-white shadow-sm;
+    @apply rounded-card border border-hairline-soft bg-white;
   }
 
+  .badge-pill {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-hairline bg-white px-3 py-1.5 text-xs font-medium text-body;
+  }
+
+  .chip {
+    @apply inline-flex items-center rounded-full border border-hairline-soft bg-surface-soft px-2.5 py-1 text-xs font-medium text-muted;
+  }
+
+  .icon-tile {
+    @apply flex h-11 w-11 shrink-0 items-center justify-center rounded-card bg-surface-soft text-ink;
+  }
+
+  /* 56px input, 1px hairline border; on focus the border flips to a 2px
+     ink rule — no glow, no ring. */
   .input {
-    @apply w-full rounded-lg border border-navy-200 bg-white px-3.5 py-2.5 text-sm text-navy-900 shadow-sm placeholder:text-navy-400 focus:border-accent-500 focus:outline-none focus:ring-2 focus:ring-accent-500/25;
+    @apply h-14 w-full rounded-lg border border-hairline bg-white px-3.5 text-base text-ink placeholder:text-muted-soft focus:border-ink focus:outline-none focus:ring-2 focus:ring-ink;
   }
 
   .link-arrow {
-    @apply inline-flex items-center gap-1.5 text-sm font-semibold text-accent-600 hover:text-accent-700;
+    @apply inline-flex items-center gap-1.5 text-sm font-medium text-ink underline-offset-4 hover:underline;
+  }
+
+  .link-brand {
+    @apply inline-flex items-center gap-1.5 text-sm font-semibold text-primary underline-offset-4 hover:text-primary-active hover:underline;
   }
 }

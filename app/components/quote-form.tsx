@@ -15,7 +15,8 @@ export function QuoteForm({
   fetcherKey = "quote",
   idPrefix = "quote",
   heading = "Get a tailored quote",
-  subheading = "Tell us what you need — we'll respond within " +
+  subheading =
+    "Tell us what you need — we'll respond within " +
     formatResponseTime() +
     ".",
 }: {
@@ -50,20 +51,20 @@ export function QuoteForm({
   if (submittedData) {
     return (
       <div className="py-4 text-center" role="status">
-        <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+        <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary">
           <Icon name="check" className="h-7 w-7" />
         </span>
-        <h3 className="mt-4 text-2xl font-bold tracking-tight text-navy-900">
+        <h3 className="mt-4 text-2xl font-bold tracking-tight text-ink">
           Thanks — request received
         </h3>
-        <p className="mx-auto mt-2 max-w-md text-navy-600">
-          Our team will respond within {formatResponseTime()}. A specialist will
-          confirm scope, recommend the right services, and prepare your tailored
-          quote.
+        <p className="mx-auto mt-2 max-w-md text-body">
+          Our team will respond within {formatResponseTime()}. A specialist
+          will confirm scope, recommend the right services, and prepare your
+          tailored quote.
         </p>
-        <p className="mt-4 text-sm text-navy-500">
+        <p className="mt-4 text-sm text-muted">
           Reference:{" "}
-          <span className="font-semibold text-navy-700">
+          <span className="font-semibold text-ink">
             {submittedData.submittedAt}
           </span>
         </p>
@@ -74,10 +75,10 @@ export function QuoteForm({
   return (
     <div>
       <div className="mb-6">
-        <h2 className="text-2xl font-bold tracking-tight text-navy-900">
+        <h2 className="text-2xl font-bold tracking-tight text-ink">
           {heading}
         </h2>
-        <p className="mt-1.5 text-sm text-navy-600">{subheading}</p>
+        <p className="mt-1.5 text-sm text-body">{subheading}</p>
       </div>
 
       <fetcher.Form
@@ -136,9 +137,9 @@ export function QuoteForm({
         </div>
 
         <fieldset>
-          <legend className="text-sm font-semibold text-navy-900">
+          <legend className="text-sm font-medium text-ink">
             Services you're interested in
-            <span className="ml-1 text-accent-600">*</span>
+            <span className="ml-1 text-primary">*</span>
           </legend>
           <div className="mt-3 grid gap-2 sm:grid-cols-2">
             {services.map((service) => {
@@ -146,16 +147,16 @@ export function QuoteForm({
               return (
                 <label
                   key={service.slug}
-                  className="flex cursor-pointer items-start gap-2.5 rounded-lg border border-navy-100 bg-navy-50/50 px-3 py-2.5 transition-colors hover:border-navy-200 has-[:checked]:border-accent-400 has-[:checked]:bg-accent-50"
+                  className="flex cursor-pointer items-start gap-2.5 rounded-card border border-hairline bg-white px-3 py-3 transition-colors hover:border-border-strong has-[:checked]:border-primary has-[:checked]:bg-navy-50"
                 >
                   <input
                     type="checkbox"
                     name="services"
                     value={service.slug}
                     defaultChecked={checked}
-                    className="mt-0.5 h-4 w-4 rounded border-navy-300 accent-accent-500"
+                    className="mt-0.5 h-4 w-4 rounded accent-primary"
                   />
-                  <span className="text-sm font-medium text-navy-800">
+                  <span className="text-sm font-medium text-ink">
                     {service.name}
                   </span>
                 </label>
@@ -163,7 +164,7 @@ export function QuoteForm({
             })}
           </div>
           {serviceError && (
-            <p className="mt-2 text-sm font-medium text-red-600" role="alert">
+            <p className="mt-2 text-sm font-medium text-error" role="alert">
               Please select at least one service.
             </p>
           )}
@@ -183,7 +184,10 @@ export function QuoteForm({
         </Field>
 
         {fetcher.data?.error && (
-          <p className="rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-700" role="alert">
+          <p
+            className="rounded-lg bg-error/5 px-3 py-2 text-sm font-medium text-error"
+            role="alert"
+          >
             {fetcher.data.error}
           </p>
         )}
@@ -202,13 +206,13 @@ export function QuoteForm({
               setServiceError(true);
             }
           }}
-          className="btn-primary w-full disabled:cursor-not-allowed disabled:opacity-70"
+          className="btn-primary w-full disabled:cursor-not-allowed disabled:bg-primary-disabled"
         >
           {pending ? "Sending…" : "Request my quote"}
           {!pending && <Icon name="arrow" className="h-4 w-4" />}
         </button>
 
-        <p className="text-center text-xs text-navy-500">
+        <p className="text-center text-xs text-muted">
           No obligation — we only use your details to prepare your quote.
         </p>
       </fetcher.Form>
@@ -229,9 +233,9 @@ function Field({
 }) {
   return (
     <div>
-      <label htmlFor={htmlFor} className="text-sm font-semibold text-navy-900">
+      <label htmlFor={htmlFor} className="text-sm font-medium text-ink">
         {label}
-        {required && <span className="ml-0.5 text-accent-600">*</span>}
+        {required && <span className="ml-0.5 text-primary">*</span>}
       </label>
       <div className="mt-1.5">{children}</div>
     </div>
