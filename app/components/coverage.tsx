@@ -11,7 +11,7 @@ export function Coverage() {
   const { openQuote } = useQuote();
 
   return (
-    <section className="bg-ink section-pad text-white">
+    <section data-dark className="bg-ink section-pad text-white">
       <div className="container-site">
         <SectionHeading
           eyebrow="Complete IT coverage"

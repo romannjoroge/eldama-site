@@ -6,21 +6,28 @@ interface ParticleFieldProps {
   className?: string;
   density?: number;
   maxDistance?: number;
+  mouseRadius?: number;
   dotColor?: string;
+  haloColor?: string;
   lineColor?: string;
+  mouseLineColor?: string;
 }
 
 /**
- * Animated network-of-nodes canvas. Nodes drift slowly and connect to nearby
- * neighbours (and the cursor) with fading lines — a subtle "live network"
- * backdrop for the hero. Renders a single static frame under reduced motion.
+ * Animated network-of-nodes canvas. Nodes drift slowly, glow softly, and
+ * connect to nearby neighbours (and the cursor) with fading lines — a subtle
+ * "live network" backdrop for the hero. Renders a single static frame under
+ * reduced motion.
  */
 export function ParticleField({
   className = "",
-  density = 45,
-  maxDistance = 130,
-  dotColor = "rgba(255,255,255,0.5)",
-  lineColor = "rgba(41,110,249,0.35)",
+  density = 55,
+  maxDistance = 150,
+  mouseRadius = 180,
+  dotColor = "rgba(255,255,255,0.9)",
+  haloColor = "rgba(41,110,249,0.16)",
+  lineColor = "rgba(41,110,249,0.45)",
+  mouseLineColor = "rgba(94,150,255,0.75)",
 }: ParticleFieldProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -50,16 +57,17 @@ export function ParticleField({
     const draw = () => {
       ctx.clearRect(0, 0, width, height);
 
+      // Nodes: soft halo + bright core so they read clearly against the dark bg.
       for (const p of particles) {
         const dxm = mouse.x - p.x;
         const dym = mouse.y - p.y;
         const dm = Math.hypot(dxm, dym);
-        if (dm < 160) {
-          p.vx += (dxm / dm) * 0.025;
-          p.vy += (dym / dm) * 0.025;
+        if (dm < mouseRadius) {
+          p.vx += (dxm / dm) * 0.03;
+          p.vy += (dym / dm) * 0.03;
         }
         const speed = Math.hypot(p.vx, p.vy);
-        const maxSpeed = 0.8;
+        const maxSpeed = 0.9;
         if (speed > maxSpeed) {
           p.vx = (p.vx / speed) * maxSpeed;
           p.vy = (p.vy / speed) * maxSpeed;
@@ -73,11 +81,17 @@ export function ParticleField({
         if (p.y > height + 20) p.y = -20;
 
         ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r * 4.5, 0, Math.PI * 2);
+        ctx.fillStyle = haloColor;
+        ctx.fill();
+
+        ctx.beginPath();
         ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
         ctx.fillStyle = dotColor;
         ctx.fill();
       }
 
+      // Connections between nearby nodes, fading with distance.
       for (let i = 0; i < particles.length; i++) {
         const a = particles[i];
         for (let j = i + 1; j < particles.length; j++) {
@@ -88,18 +102,20 @@ export function ParticleField({
             ctx.moveTo(a.x, a.y);
             ctx.lineTo(b.x, b.y);
             ctx.strokeStyle = lineColor;
-            ctx.globalAlpha = (1 - d / maxDistance) * 0.7;
+            ctx.globalAlpha = (1 - d / maxDistance) * 0.8;
             ctx.lineWidth = 1;
             ctx.stroke();
           }
         }
+        // Cursor links are the hero moment — brighter and thicker.
         const dm = Math.hypot(a.x - mouse.x, a.y - mouse.y);
-        if (dm < 180) {
+        if (dm < mouseRadius) {
           ctx.beginPath();
           ctx.moveTo(a.x, a.y);
           ctx.lineTo(mouse.x, mouse.y);
-          ctx.strokeStyle = "rgba(41,110,249,0.55)";
-          ctx.globalAlpha = (1 - dm / 180) * 0.6;
+          ctx.strokeStyle = mouseLineColor;
+          ctx.globalAlpha = (1 - dm / mouseRadius) * 0.9;
+          ctx.lineWidth = 1.4;
           ctx.stroke();
         }
       }
@@ -113,13 +129,13 @@ export function ParticleField({
       canvas.width = width * dpr;
       canvas.height = height * dpr;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      const count = Math.max(12, Math.min(density, Math.round((width * height) / 20000)));
+      const count = Math.max(14, Math.min(density, Math.round((width * height) / 16000)));
       particles = Array.from({ length: count }, () => ({
         x: Math.random() * width,
         y: Math.random() * height,
         vx: (Math.random() - 0.5) * 0.4,
         vy: (Math.random() - 0.5) * 0.4,
-        r: Math.random() * 1.6 + 0.6,
+        r: Math.random() * 1.7 + 0.7,
       }));
       if (reduce) draw();
     };

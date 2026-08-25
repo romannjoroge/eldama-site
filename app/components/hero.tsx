@@ -30,13 +30,16 @@ export function Hero() {
   const { openQuote } = useQuote();
 
   return (
-    <section className="relative overflow-hidden bg-ink text-white">
-      {/* ===== Backdrop: aurora + grid + live particle network ===== */}
+    <section data-dark className="relative overflow-hidden bg-ink text-white">
+      {/* ===== Backdrop: aurora + live particle network + ambient occlusion ===== */}
       <div className="absolute inset-0" aria-hidden="true">
-        <div className="animate-aurora-slow absolute -left-32 -top-32 h-[480px] w-[480px] rounded-full bg-primary/35 blur-[120px]" />
-        <div className="animate-aurora-slower absolute -right-24 top-1/4 h-[420px] w-[420px] rounded-full bg-primary-bright/25 blur-[130px]" />
-        <div className="bg-grid absolute inset-0 opacity-60" />
-        <ParticleField className="absolute inset-0 h-full w-full opacity-50" />
+        <div className="animate-aurora-slow absolute -left-32 -top-32 h-[520px] w-[520px] rounded-full bg-primary/40 blur-[130px]" />
+        <div className="animate-aurora-slower absolute -right-24 top-1/4 h-[440px] w-[440px] rounded-full bg-primary-bright/30 blur-[140px]" />
+        <ParticleField className="absolute inset-0 h-full w-full opacity-80" density={60} />
+        {/* Center glow pulls the eye to the copy */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_55%_at_50%_42%,rgba(41,110,249,0.12),transparent_65%)]" />
+        {/* Ambient occlusion vignette — edges fall into darkness, network stays contained */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_35%,rgba(8,11,20,0.6)_100%)]" />
         <div className="absolute inset-0 bg-gradient-to-b from-ink/30 via-transparent to-ink" />
       </div>
 
@@ -73,13 +76,18 @@ export function Hero() {
                 aria-label="Your outsourced IT department, without the headcount."
               >
                 <AnimatedWords text="Your outsourced IT department," animate={ready} />
-                <span className="bg-gradient-to-r from-primary-bright via-primary-soft to-primary-bright bg-clip-text text-transparent">
-                  <AnimatedWords
-                    text="without the headcount."
-                    delay={0.35}
-                    animate={ready}
-                  />
-                </span>
+                {/* Transform animates the wrapper; the gradient stays clipped to an
+                    untransformed leaf so Chromium paints it reliably. */}
+                <motion.span
+                  className="inline-block"
+                  initial={{ opacity: 0, y: 18 }}
+                  animate={ready ? { opacity: 1, y: 0 } : { opacity: 0, y: 18 }}
+                  transition={{ duration: 0.5, ease: EASE, delay: 0.35 }}
+                >
+                  <span className="bg-gradient-to-r from-primary-bright via-primary-soft to-primary-bright bg-clip-text text-transparent">
+                    without the headcount.
+                  </span>
+                </motion.span>
               </motion.h1>
 
               <motion.p

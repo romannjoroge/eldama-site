@@ -5,7 +5,7 @@ import { company, partnerBadges, services } from "~/data/site";
 
 export function Footer() {
   return (
-    <footer className="bg-ink pb-24 pt-16 text-steel md:pb-12">
+    <footer data-dark className="bg-ink pb-24 pt-16 text-steel md:pb-12">
       <div className="container-site">
         <div className="grid gap-10 lg:grid-cols-[1.4fr_1fr_1fr_1.2fr]">
           <div>
