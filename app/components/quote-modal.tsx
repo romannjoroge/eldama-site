@@ -98,7 +98,7 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
           aria-label="Get a quote"
         >
           <div
-            className="fixed inset-0 bg-navy-950/70 backdrop-blur-sm"
+            className="fixed inset-0 bg-ink/70"
             onClick={closeQuote}
             aria-hidden="true"
           />
@@ -106,13 +106,13 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
             <div
               ref={panelRef}
               tabIndex={-1}
-              className="relative w-full max-w-xl rounded-2xl bg-white p-6 shadow-2xl outline-none sm:p-8"
+              className="relative w-full max-w-xl rounded-[16px] border border-hairline bg-white p-6 shadow-[0_8px_24px_rgba(26,26,26,0.12)] outline-none sm:p-8"
             >
               <button
                 type="button"
                 onClick={closeQuote}
                 aria-label="Close quote form"
-                className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full text-navy-500 transition-colors hover:bg-navy-50 hover:text-navy-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-400"
+                className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-[4px] text-graphite transition-colors hover:bg-cloud hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               >
                 <Icon name="close" className="h-5 w-5" />
               </button>

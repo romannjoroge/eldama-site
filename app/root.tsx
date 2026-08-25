@@ -23,7 +23,7 @@ export const links: Route.LinksFunction = () => [
   },
   {
     rel: "stylesheet",
-    href: "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap",
+    href: "https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap",
   },
 ];
 
@@ -77,14 +77,12 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-navy-50/60 px-4 py-20">
-      <div className="w-full max-w-md rounded-2xl border border-navy-100 bg-white p-8 text-center shadow-sm">
-        <h1 className="text-3xl font-extrabold tracking-tight text-navy-900">
-          {message}
-        </h1>
-        <p className="mt-3 text-navy-600">{details}</p>
+    <main className="flex min-h-screen items-center justify-center bg-cloud px-4 py-20">
+      <div className="w-full max-w-md rounded-[16px] border border-hairline bg-white p-8 text-center shadow-[0_2px_8px_rgba(26,26,26,0.08)]">
+        <h1 className="text-4xl font-medium leading-[1.05] text-ink">{message}</h1>
+        <p className="mt-3 text-charcoal">{details}</p>
         {stack && (
-          <pre className="mt-4 overflow-x-auto rounded-lg bg-navy-50 p-4 text-left text-xs text-navy-700">
+          <pre className="mt-4 overflow-x-auto rounded-[8px] bg-cloud p-4 text-left text-xs text-charcoal">
             <code>{stack}</code>
           </pre>
         )}
@@ -96,7 +94,7 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
 function MobileQuoteBar() {
   const { openQuote } = useQuote();
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-navy-100 bg-white/95 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur md:hidden">
+    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-hairline bg-white/95 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur md:hidden">
       <button
         type="button"
         onClick={() => openQuote()}

@@ -13,6 +13,7 @@ Build a corporate B2B website for **Eldama**, a technology company that acts as 
 - Typography: clean, modern sans-serif (e.g. Inter, Manrope, or similar). Strong, confident headings; readable body text.
 - Use **placeholder logo and imagery for now** — I will supply real brand assets (logo, exact color hex codes, imagery) after reviewing the initial design. Structure the code so swapping the logo and color tokens later is easy (e.g. centralized theme/config, not colors hardcoded everywhere).
 - Avoid anything playful, informal, or consumer-tech styled (no bubbly illustrations, no casual copy). Think "enterprise IT vendor," not "startup app."
+- More details can be found in the DESIGN-hp.md file
 
 ## Site Structure: Hybrid Model
 
