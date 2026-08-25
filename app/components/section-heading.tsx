@@ -2,7 +2,7 @@
 
 import { motion } from "motion/react";
 
-import { EASE, Reveal, makeStagger } from "~/components/motion";
+import { EASE, Reveal, makeStagger, useReveal } from "~/components/motion";
 
 const wordVariants = {
   hidden: { y: "115%" },
@@ -30,15 +30,16 @@ export function RevealHeading({
 }: RevealHeadingProps) {
   const Comp = as === "h1" ? "h1" : as === "h3" ? "h3" : "h2";
   const words = text.split(" ");
+  const { ref, shown } = useReveal();
 
   return (
     <Comp className={`text-balance ${className}`} aria-label={text}>
       <motion.span
+        ref={ref}
         className="inline"
         variants={makeStagger(stagger, delay)}
         initial="hidden"
-        whileInView="show"
-        viewport={{ once: true, margin: "-80px" }}
+        animate={shown ? "show" : "hidden"}
       >
         {words.map((word, index) => (
           <span

@@ -5,7 +5,12 @@ import {
   useReducedMotion,
   type Variants,
 } from "motion/react";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 
 /** Shared, brand-consistent easing curve. */
 export const EASE: [number, number, number, number] = [0.22, 1, 0.36, 1];
@@ -29,6 +34,37 @@ export const scaleItem: Variants = {
   show: { opacity: 1, scale: 1, y: 0, transition: { duration: 0.5, ease: EASE } },
 };
 
+/**
+ * Robust in-view reveal. Uses IntersectionObserver with a positive threshold,
+ * and as a safety net also polls the element's geometry so content can never
+ * stay hidden (covers client-side navigation + Lenis edge cases).
+ */
+export function useReveal(amount = 0.12) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const ref = useRef<any>(null);
+  const [shown, setShown] = useState(false);
+  const inView = useInView(ref, { once: true, amount });
+
+  useEffect(() => {
+    if (inView) {
+      setShown(true);
+      return;
+    }
+    const id = window.setInterval(() => {
+      const el = ref.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      if (rect.bottom > 0 && rect.top < window.innerHeight * 0.92) {
+        setShown(true);
+        window.clearInterval(id);
+      }
+    }, 900);
+    return () => window.clearInterval(id);
+  }, [inView, amount]);
+
+  return { ref, shown };
+}
+
 interface StaggerProps {
   children: ReactNode;
   className?: string;
@@ -51,12 +87,15 @@ export function Stagger({
   margin = "-80px",
 }: StaggerProps) {
   const reduce = useReducedMotion();
+  const { ref, shown } = useReveal();
+  void once;
+  void margin;
   return (
     <motion.div
+      ref={ref}
       className={className}
       initial={reduce ? "show" : "hidden"}
-      whileInView="show"
-      viewport={{ once, margin }}
+      animate={shown ? "show" : "hidden"}
       variants={makeStagger(stagger, delayChildren)}
     >
       {children}
@@ -107,16 +146,17 @@ export function Reveal({
   margin = "-80px",
 }: RevealProps) {
   const reduce = useReducedMotion();
+  const { ref, shown } = useReveal();
+  void once;
+  void margin;
+  const hidden = { opacity: 0, y, x, ...(blur ? { filter: "blur(8px)" } : {}) };
+  const visible = { opacity: 1, y: 0, x: 0, filter: "blur(0px)" };
   return (
     <motion.div
+      ref={ref}
       className={className}
-      initial={
-        reduce
-          ? false
-          : { opacity: 0, y, x, ...(blur ? { filter: "blur(8px)" } : {}) }
-      }
-      whileInView={{ opacity: 1, y: 0, x: 0, filter: "blur(0px)" }}
-      viewport={{ once, margin }}
+      initial={reduce ? visible : hidden}
+      animate={reduce ? visible : shown ? visible : hidden}
       transition={{ duration, delay, ease: EASE }}
     >
       {children}
@@ -138,13 +178,12 @@ export function CountUp({
   duration = 1.8,
   className,
 }: CountUpProps) {
-  const ref = useRef<HTMLSpanElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-60px" });
   const reduce = useReducedMotion();
+  const { ref, shown } = useReveal(0.3);
   const [display, setDisplay] = useState("0");
 
   useEffect(() => {
-    if (!inView) return;
+    if (!shown) return;
     if (reduce) {
       setDisplay(String(to));
       return;
@@ -155,7 +194,7 @@ export function CountUp({
       onUpdate: (value) => setDisplay(Math.round(value).toLocaleString()),
     });
     return () => controls.stop();
-  }, [inView, to, duration, reduce]);
+  }, [shown, to, duration, reduce]);
 
   return (
     <span ref={ref} className={className}>

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
 
 import { Icon } from "~/components/icons";
+import { OrganicFlow } from "~/components/organic-flow";
 import { Tilt } from "~/components/tilt";
 import { services } from "~/data/site";
 
@@ -30,28 +31,14 @@ function nodePosition(index: number) {
   };
 }
 
-// A gentle curved "energy strand" from the hub to a node.
-function edgePath(p: { x: number; y: number }, index: number) {
-  const bend = (index % 2 === 0 ? 1 : -1) * 6;
-  const mx = (CENTER + p.x) / 2;
-  const my = (CENTER + p.y) / 2;
-  const nx = -(p.y - CENTER);
-  const ny = p.x - CENTER;
-  const norm = Math.hypot(nx, ny) || 1;
-  const cx = mx + (nx / norm) * bend;
-  const cy = my + (ny / norm) * bend;
-  return `M ${CENTER} ${CENTER} Q ${cx.toFixed(2)} ${cy.toFixed(2)} ${p.x} ${p.y}`;
-}
-
 /**
- * Organic "one partner" network: curved energy strands breathing between a
- * glowing hub and softly drifting service nodes, with slow pulses travelling
- * along every link. Desktop only — coverage falls back to a grid on mobile.
+ * Organic "one partner" network: a glowing hub ringed by service nodes, with
+ * particles flowing along undulating energy strands and ripples radiating
+ * outward — a living piece rather than a plotted diagram.
  */
 export function StackOrbit() {
   const reduce = useReducedMotion();
   const [active, setActive] = useState<number | null>(null);
-
   const points = services.map((_, i) => nodePosition(i));
 
   return (
@@ -60,109 +47,27 @@ export function StackOrbit() {
         className="relative h-full w-full"
         initial={{ opacity: 0, scale: 0.9 }}
         whileInView={{ opacity: 1, scale: 1 }}
-        viewport={{ once: true, margin: "-80px" }}
+        viewport={{ once: true, amount: 0.2 }}
         transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
       >
-        {/* Soft breathing glow behind the whole diagram */}
+        {/* Organic energy field */}
+        <OrganicFlow positions={points} active={active} className="absolute inset-0 h-full w-full" />
+
+        {/* Soft breathing glow behind the hub */}
         <motion.div
           aria-hidden="true"
-          className="absolute -inset-6 rounded-full bg-primary-bright/12 blur-3xl"
-          animate={reduce ? undefined : { opacity: [0.4, 0.85, 0.4], scale: [0.96, 1.05, 0.96] }}
+          className="absolute left-1/2 top-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary-bright/12 blur-3xl"
+          animate={reduce ? undefined : { opacity: [0.4, 0.85, 0.4], scale: [0.96, 1.06, 0.96] }}
           transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
         />
-
-        {/* Energy strands */}
-        <svg
-          viewBox="0 0 100 100"
-          className="absolute inset-0 h-full w-full"
-          aria-hidden="true"
-        >
-          <defs>
-            <linearGradient id="orbit-edge" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#4d8bff" />
-              <stop offset="100%" stopColor="#1f5fe0" />
-            </linearGradient>
-          </defs>
-
-          {services.map((service, i) => {
-            const p = points[i];
-            const d = edgePath(p, i);
-            const isActive = active === i;
-            return (
-              <g key={service.slug}>
-                {/* Base strand */}
-                <motion.path
-                  d={d}
-                  fill="none"
-                  stroke={isActive ? "rgba(122,180,255,0.9)" : "rgba(255,255,255,0.14)"}
-                  strokeWidth={isActive ? 0.7 : 0.4}
-                  style={{ transition: "stroke 0.3s, stroke-width 0.3s" }}
-                  initial={{ pathLength: 0 }}
-                  whileInView={{ pathLength: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 1, delay: 0.15 + i * 0.08 }}
-                />
-                {/* Soft flowing highlight */}
-                <motion.path
-                  d={d}
-                  fill="none"
-                  stroke="url(#orbit-edge)"
-                  strokeWidth="0.35"
-                  animate={
-                    reduce
-                      ? undefined
-                      : { opacity: [0.25, isActive ? 0.95 : 0.7, 0.25] }
-                  }
-                  transition={{ duration: 3.5 + i * 0.5, repeat: Infinity, ease: "easeInOut" }}
-                />
-                {/* Slow energy pulses travelling the strand */}
-                {!reduce && (
-                  <g>
-                    <circle r="1.6" fill="#9cc6ff" style={{ filter: "drop-shadow(0 0 3px rgba(122,180,255,0.9))" }}>
-                      <animateMotion
-                        dur={2.4 + i * 0.4}
-                        repeatCount="indefinite"
-                        begin={`${-i * 0.9}s`}
-                      >
-                        <mpath href={`#edge-${service.slug}`} />
-                      </animateMotion>
-                    </circle>
-                    <circle r="1.3" fill="#7ab4ff" style={{ filter: "drop-shadow(0 0 2px rgba(122,180,255,0.8))" }}>
-                      <animateMotion
-                        dur={3.2 + i * 0.5}
-                        repeatCount="indefinite"
-                        begin={`${-i * 0.9 - 1.2}s`}
-                      >
-                        <mpath href={`#edge-rev-${service.slug}`} />
-                      </animateMotion>
-                    </circle>
-                  </g>
-                )}
-              </g>
-            );
-          })}
-
-          {/* Hidden reference paths so the pulses follow the same curves */}
-          {services.map((service, i) => {
-            const p = points[i];
-            const d = edgePath(p, i);
-            const reversed = `M ${p.x} ${p.y} Q ${d.split(" Q ")[1].split(" L ")[0]} ${CENTER} ${CENTER}`;
-            return (
-              <g key={`ref-${service.slug}`}>
-                <path id={`edge-${service.slug}`} d={d} fill="none" stroke="none" />
-                <path id={`edge-rev-${service.slug}`} d={reversed} fill="none" stroke="none" />
-              </g>
-            );
-          })}
-        </svg>
 
         {/* ===== Hub ===== */}
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
           <motion.div
             initial={{ opacity: 0, scale: 0.5 }}
             whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ type: "spring", stiffness: 200, damping: 18, delay: 0.2 }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ type: "spring", stiffness: 200, damping: 18, delay: 0.15 }}
             className="relative flex h-28 w-28 items-center justify-center"
           >
             <motion.span
@@ -235,7 +140,7 @@ export function StackOrbit() {
                 <motion.div
                   initial={{ opacity: 0, scale: 0.5 }}
                   whileInView={{ opacity: 1, scale: 1 }}
-                  viewport={{ once: true }}
+                  viewport={{ once: true, amount: 0.2 }}
                   transition={{
                     type: "spring",
                     stiffness: 220,
