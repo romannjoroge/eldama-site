@@ -1,4 +1,5 @@
-import { motion, type Variants } from "motion/react";
+import { useState } from "react";
+import { AnimatePresence, motion, type Variants } from "motion/react";
 
 import { Icon } from "~/components/icons";
 import { useIntro } from "~/components/intro";
@@ -12,6 +13,7 @@ import {
 } from "~/components/motion";
 import { ParticleField } from "~/components/particle-field";
 import { useQuote } from "~/components/quote-modal";
+import { iconForTool, shortToolName } from "~/components/tech";
 import { Tilt } from "~/components/tilt";
 import { formatResponseTime, services, stats } from "~/data/site";
 
@@ -28,6 +30,7 @@ const consoleRow: Variants = {
 export function Hero() {
   const { ready } = useIntro();
   const { openQuote } = useQuote();
+  const [expanded, setExpanded] = useState<number | null>(null);
 
   return (
     <section data-dark className="relative overflow-hidden bg-ink text-white">
@@ -169,35 +172,92 @@ export function Hero() {
                         </p>
                       </div>
                       <p className="text-[12px] text-steel">
-                        {services.length} services · monitored
+                        {services.length} services · tap to expand
                       </p>
                     </div>
 
-                    {/* Service rows */}
+                    {/* Service rows — expandable to reveal the tech under each */}
                     <motion.ul
                       variants={consoleStagger}
                       initial="hidden"
                       animate={ready ? "show" : "hidden"}
                       className="mt-5 space-y-2"
                     >
-                      {services.map((service) => (
-                        <motion.li
-                          key={service.slug}
-                          variants={consoleRow}
-                          className="group flex items-center gap-3 rounded-[8px] border border-white/10 bg-white/5 px-4 py-3 transition-colors duration-200 hover:border-primary-bright/50 hover:bg-white/10"
-                        >
-                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[6px] bg-white/10 text-primary-bright transition-colors duration-200 group-hover:bg-primary-bright group-hover:text-ink">
-                            <Icon name={service.icon} className="h-5 w-5" />
-                          </span>
-                          <span className="flex-1 text-[15px] font-medium text-white">
-                            {service.name}
-                          </span>
-                          <span className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-white/50">
-                            <span className="h-1.5 w-1.5 rounded-full bg-primary-bright" />
-                            Online
-                          </span>
-                        </motion.li>
-                      ))}
+                      {services.map((service, index) => {
+                        const open = expanded === index;
+                        return (
+                          <motion.li
+                            key={service.slug}
+                            variants={consoleRow}
+                            className={`overflow-hidden rounded-[8px] border bg-white/5 transition-colors duration-200 ${
+                              open
+                                ? "border-primary-bright/60 bg-white/10"
+                                : "border-white/10 hover:border-primary-bright/50 hover:bg-white/10"
+                            }`}
+                          >
+                            <button
+                              type="button"
+                              onClick={() => setExpanded(open ? null : index)}
+                              aria-expanded={open}
+                              className="flex w-full items-center gap-3 px-4 py-3 text-left"
+                            >
+                              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[6px] bg-white/10 text-primary-bright transition-colors duration-200">
+                                <Icon name={service.icon} className="h-5 w-5" />
+                              </span>
+                              <span className="flex-1 text-[15px] font-medium text-white">
+                                {service.name}
+                              </span>
+                              <span className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-white/50">
+                                <span className="h-1.5 w-1.5 rounded-full bg-primary-bright" />
+                                Online
+                              </span>
+                              <Icon
+                                name="arrow"
+                                className={`h-3.5 w-3.5 shrink-0 text-white/50 transition-transform duration-300 ${
+                                  open ? "rotate-90" : ""
+                                }`}
+                              />
+                            </button>
+
+                            <AnimatePresence initial={false}>
+                              {open && (
+                                <motion.div
+                                  initial={{ height: 0, opacity: 0 }}
+                                  animate={{ height: "auto", opacity: 1 }}
+                                  exit={{ height: 0, opacity: 0 }}
+                                  transition={{ duration: 0.28, ease: EASE }}
+                                  className="overflow-hidden"
+                                >
+                                  <div className="border-t border-white/10 px-4 py-3">
+                                    <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/40">
+                                      {service.name} stack
+                                    </p>
+                                    <div className="mt-2 flex flex-wrap gap-1">
+                                      {service.tools.slice(0, 6).map((tool) => (
+                                        <span
+                                          key={tool.name}
+                                          className="inline-flex items-center gap-1 rounded-[4px] border border-white/10 bg-white/5 px-1.5 py-0.5 text-[10px] font-medium text-white/80"
+                                        >
+                                          <Icon
+                                            name={iconForTool(tool.name)}
+                                            className="h-3 w-3 text-primary-bright"
+                                          />
+                                          {shortToolName(tool.name)}
+                                        </span>
+                                      ))}
+                                      {service.tools.length > 6 && (
+                                        <span className="self-center px-1 text-[10px] text-white/40">
+                                          +{service.tools.length - 6} more
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
+                          </motion.li>
+                        );
+                      })}
                     </motion.ul>
 
                     {/* Terminal footer */}

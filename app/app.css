@@ -64,7 +64,9 @@ html {
   .marquee-track,
   .grain,
   .animate-aurora-slow,
-  .animate-aurora-slower {
+  .animate-aurora-slower,
+  .animate-blob,
+  .animate-blob-slow {
     animation: none;
   }
 }
@@ -169,7 +171,58 @@ html {
 }
 
 /* =====================================================================
-   Film grain overlay — adds texture so flat colour bands stop feeling sterile.
+   Organic blob morph — for the hub's soft breathing rings in the coverage
+   diagram. Blurs away the "perfect circle" tackiness.
+   ===================================================================== */
+@keyframes blob-morph {
+  0%,
+  100% {
+    border-radius: 42% 58% 55% 45% / 45% 48% 52% 55%;
+  }
+  33% {
+    border-radius: 55% 45% 42% 58% / 55% 45% 45% 55%;
+  }
+  66% {
+    border-radius: 48% 52% 58% 42% / 45% 55% 48% 52%;
+  }
+}
+
+.animate-blob {
+  animation: blob-morph 9s ease-in-out infinite;
+}
+
+.animate-blob-slow {
+  animation: blob-morph 14s ease-in-out infinite reverse;
+}
+
+/* =====================================================================
+   Custom thin scrollbar for the quote modal — a subtle blue thumb on a
+   transparent track instead of the chunky native scrollbar.
+   ===================================================================== */
+.scroll-modal {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(2, 74, 216, 0.45) transparent;
+}
+
+.scroll-modal::-webkit-scrollbar {
+  width: 5px;
+}
+
+.scroll-modal::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scroll-modal::-webkit-scrollbar-thumb {
+  background: rgba(2, 74, 216, 0.4);
+  border-radius: 9999px;
+}
+
+.scroll-modal::-webkit-scrollbar-thumb:hover {
+  background: rgba(2, 74, 216, 0.65);
+}
+
+/* =====================================================================
+   Grain overlay — adds texture so flat colour bands stop feeling sterile.
    ===================================================================== */
 .grain {
   position: fixed;

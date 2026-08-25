@@ -52,8 +52,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
 export default function App() {
   return (
     <MotionConfig reducedMotion="user">
-      <QuoteProvider>
-        <SmoothScroll>
+      <SmoothScroll>
+        <QuoteProvider>
           <IntroProvider>
             <div className="flex min-h-screen flex-col">
               <ScrollProgress />
@@ -66,8 +66,8 @@ export default function App() {
             </div>
             <div className="grain" aria-hidden="true" />
           </IntroProvider>
-        </SmoothScroll>
-      </QuoteProvider>
+        </QuoteProvider>
+      </SmoothScroll>
     </MotionConfig>
   );
 }

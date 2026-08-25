@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { motion, useReducedMotion } from "motion/react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 
 import { Icon } from "~/components/icons";
+import { EASE } from "~/components/motion";
 import { OrganicFlow } from "~/components/organic-flow";
+import { iconForTool, shortToolName } from "~/components/tech";
 import { Tilt } from "~/components/tilt";
 import { services } from "~/data/site";
 
@@ -32,9 +34,9 @@ function nodePosition(index: number) {
 }
 
 /**
- * Organic "one partner" network: a glowing hub ringed by service nodes, with
- * particles flowing along undulating energy strands and ripples radiating
- * outward — a living piece rather than a plotted diagram.
+ * Organic "one partner" network: a softly breathing hub ringed by service nodes.
+ * Particles flow along undulating energy strands, ripples radiate outward, and
+ * hovering a node reveals its sub-technologies.
  */
 export function StackOrbit() {
   const reduce = useReducedMotion();
@@ -53,15 +55,7 @@ export function StackOrbit() {
         {/* Organic energy field */}
         <OrganicFlow positions={points} active={active} className="absolute inset-0 h-full w-full" />
 
-        {/* Soft breathing glow behind the hub */}
-        <motion.div
-          aria-hidden="true"
-          className="absolute left-1/2 top-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary-bright/12 blur-3xl"
-          animate={reduce ? undefined : { opacity: [0.4, 0.85, 0.4], scale: [0.96, 1.06, 0.96] }}
-          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-        />
-
-        {/* ===== Hub ===== */}
+        {/* ===== Hub: soft, blurred, morphing organic blobs ===== */}
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
           <motion.div
             initial={{ opacity: 0, scale: 0.5 }}
@@ -70,34 +64,39 @@ export function StackOrbit() {
             transition={{ type: "spring", stiffness: 200, damping: 18, delay: 0.15 }}
             className="relative flex h-28 w-28 items-center justify-center"
           >
+            {/* Breathing blurred blobs (not hard rings) */}
             <motion.span
               aria-hidden="true"
-              className="absolute inset-0 rounded-full border border-primary-bright/50"
-              animate={{ scale: [1, 1.5, 1], opacity: [0.7, 0, 0.7] }}
-              transition={{ duration: 2.4, repeat: Infinity, ease: "easeOut" }}
+              className="animate-blob absolute -inset-2 blur-xl"
+              style={{
+                background:
+                  "radial-gradient(circle, rgba(41,110,249,0.32), transparent 70%)",
+              }}
+              animate={{ scale: [1, 1.7, 1], opacity: [0.75, 0.12, 0.75] }}
+              transition={{ duration: 3.4, repeat: Infinity, ease: "easeInOut" }}
             />
             <motion.span
               aria-hidden="true"
-              className="absolute inset-0 rounded-full border border-primary-bright/40"
-              animate={{ scale: [1, 1.22, 1], opacity: [0.5, 0, 0.5] }}
-              transition={{ duration: 2.4, repeat: Infinity, ease: "easeOut", delay: 0.5 }}
+              className="animate-blob-slow absolute -inset-6 blur-2xl"
+              style={{
+                background:
+                  "radial-gradient(circle, rgba(122,180,255,0.24), transparent 72%)",
+              }}
+              animate={{ scale: [1, 1.45, 1], opacity: [0.5, 0.16, 0.5] }}
+              transition={{ duration: 5.2, repeat: Infinity, ease: "easeInOut", delay: 0.9 }}
             />
-            <motion.span
-              aria-hidden="true"
-              className="absolute -inset-2 rounded-full border border-primary-bright/25"
-              animate={{ scale: [1, 1.1, 1], opacity: [0.5, 0.2, 0.5] }}
-              transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
-            />
-            <div className="relative flex h-24 w-24 flex-col items-center justify-center rounded-full border border-primary-bright/60 text-center shadow-[0_0_70px_rgba(41,110,249,0.55)]">
+
+            {/* Hub core */}
+            <div className="animate-blob relative flex h-24 w-24 flex-col items-center justify-center overflow-hidden text-center shadow-[0_0_80px_rgba(41,110,249,0.5)]">
               <span
-                className="absolute inset-0 rounded-full"
+                className="absolute inset-0"
                 style={{
                   background:
                     "radial-gradient(circle at 38% 30%, #1d3b63, #0a1224 72%)",
                 }}
               />
               <span
-                className="absolute inset-0 rounded-full"
+                className="absolute inset-0"
                 style={{ background: "radial-gradient(circle at 35% 28%, rgba(255,255,255,0.18), transparent 55%)" }}
               />
               <span className="relative flex h-7 w-7 items-center justify-center rounded-full bg-primary-bright/20">
@@ -148,27 +147,65 @@ export function StackOrbit() {
                     delay: 0.3 + i * 0.09,
                   }}
                 >
-                  <div
-                    className={`flex w-max max-w-[160px] items-center gap-2 rounded-full border px-3.5 py-2 backdrop-blur-md transition-colors duration-300 ${
-                      active === i
-                        ? "border-primary-bright/80 bg-primary-bright/15 shadow-[0_0_24px_rgba(41,110,249,0.35)]"
-                        : "border-white/15 bg-[#0d1424]/80"
-                    }`}
-                  >
-                    <span
-                      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-[4px] transition-colors duration-300 ${
-                        active === i ? "bg-primary-bright text-ink" : "bg-white/10 text-primary-bright"
+                  <div className="relative">
+                    <div
+                      className={`flex w-max max-w-[160px] items-center gap-2 rounded-full border px-3.5 py-2 backdrop-blur-md transition-colors duration-300 ${
+                        active === i
+                          ? "border-primary-bright/80 bg-primary-bright/15 shadow-[0_0_24px_rgba(41,110,249,0.35)]"
+                          : "border-white/15 bg-[#0d1424]/80"
                       }`}
                     >
-                      <Icon name={service.icon} className="h-3.5 w-3.5" />
-                    </span>
-                    <span className="text-[12px] font-semibold leading-tight text-white">
-                      {service.shortName}
-                    </span>
-                    <span className="relative flex h-1.5 w-1.5">
-                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary-bright opacity-75" />
-                      <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-primary-bright" />
-                    </span>
+                      <span
+                        className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-[4px] transition-colors duration-300 ${
+                          active === i ? "bg-primary-bright text-ink" : "bg-white/10 text-primary-bright"
+                        }`}
+                      >
+                        <Icon name={service.icon} className="h-3.5 w-3.5" />
+                      </span>
+                      <span className="text-[12px] font-semibold leading-tight text-white">
+                        {service.shortName}
+                      </span>
+                      <span className="relative flex h-1.5 w-1.5">
+                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary-bright opacity-75" />
+                        <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-primary-bright" />
+                      </span>
+                    </div>
+
+                    {/* Sub-technology reveal on hover */}
+                    <AnimatePresence>
+                      {active === i && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 6, scale: 0.92 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 4, scale: 0.94 }}
+                          transition={{ duration: 0.22, ease: EASE }}
+                          className="absolute left-1/2 top-full z-20 mt-2 w-max max-w-[230px] -translate-x-1/2 rounded-[12px] border border-primary-bright/30 bg-[#0a1224]/95 p-3 shadow-[0_16px_48px_rgba(0,0,0,0.55)] backdrop-blur-xl"
+                        >
+                          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-primary-bright">
+                            {service.shortName} stack
+                          </p>
+                          <div className="mt-2 flex max-w-[220px] flex-wrap gap-1">
+                            {service.tools.slice(0, 6).map((tool) => (
+                              <span
+                                key={tool.name}
+                                className="inline-flex items-center gap-1 rounded-[4px] border border-white/10 bg-white/5 px-1.5 py-0.5 text-[10px] font-medium text-white/85"
+                              >
+                                <Icon
+                                  name={iconForTool(tool.name)}
+                                  className="h-3 w-3 text-primary-bright"
+                                />
+                                {shortToolName(tool.name)}
+                              </span>
+                            ))}
+                            {service.tools.length > 6 && (
+                              <span className="px-1 py-0.5 text-[10px] text-white/50">
+                                +{service.tools.length - 6} more
+                              </span>
+                            )}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 </motion.div>
               </motion.div>

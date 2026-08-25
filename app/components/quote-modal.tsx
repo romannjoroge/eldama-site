@@ -11,6 +11,7 @@ import {
 } from "react";
 
 import { AnimatePresence, motion } from "motion/react";
+import { useLenis } from "lenis/react";
 
 import { Icon } from "~/components/icons";
 import { QuoteOnboarding } from "~/components/quote-onboarding";
@@ -35,6 +36,7 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
   const [openCount, setOpenCount] = useState(0);
   const panelRef = useRef<HTMLDivElement>(null);
   const restoreFocusRef = useRef<HTMLElement | null>(null);
+  const lenis = useLenis();
 
   const openQuote = useCallback((serviceSlugs?: ServiceSlug[]) => {
     restoreFocusRef.current = document.activeElement as HTMLElement | null;
@@ -56,6 +58,16 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
       document.body.style.overflow = previous;
     };
   }, [open]);
+
+  // Stop Lenis while the modal is open so wheel/touch scroll the modal itself,
+  // never the page behind it.
+  useEffect(() => {
+    if (!open) return;
+    lenis?.stop();
+    return () => {
+      lenis?.start();
+    };
+  }, [open, lenis]);
 
   // Move focus into the dialog and restore it on close.
   useEffect(() => {
@@ -110,7 +122,7 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
               onClick={closeQuote}
               aria-hidden="true"
             />
-            <div className="flex min-h-full items-center justify-center p-4 sm:p-6">
+            <div className="flex min-h-full items-center justify-center p-4 py-6 sm:p-6">
               <motion.div
                 ref={panelRef}
                 tabIndex={-1}
@@ -118,27 +130,28 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.96, y: 12 }}
                 transition={{ type: "spring", stiffness: 320, damping: 28 }}
-                className="relative w-full max-w-xl overflow-hidden rounded-[16px] border border-hairline bg-white p-6 shadow-[0_24px_64px_rgba(26,26,26,0.28)] outline-none sm:p-8"
+                className="relative flex max-h-[calc(100dvh-3rem)] w-full max-w-xl flex-col overflow-hidden rounded-[16px] border border-hairline bg-white shadow-[0_24px_64px_rgba(26,26,26,0.28)] outline-none"
               >
                 {/* Brand accent bar */}
                 <span
                   aria-hidden="true"
-                  className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-primary via-primary-bright to-primary"
+                  className="absolute inset-x-0 top-0 z-30 h-[3px] bg-gradient-to-r from-primary via-primary-bright to-primary"
                 />
                 {/* Ambient glow */}
                 <span
                   aria-hidden="true"
-                  className="pointer-events-none absolute -right-20 -top-20 h-48 w-48 rounded-full bg-primary-soft/60 blur-3xl"
+                  className="pointer-events-none absolute -right-20 -top-20 z-0 h-48 w-48 rounded-full bg-primary-soft/60 blur-3xl"
                 />
                 <button
                   type="button"
                   onClick={closeQuote}
                   aria-label="Close quote form"
-                  className="absolute right-4 top-4 z-20 flex h-9 w-9 items-center justify-center rounded-[4px] text-graphite transition-colors hover:bg-cloud hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  className="absolute right-4 top-4 z-40 flex h-9 w-9 items-center justify-center rounded-[4px] text-graphite transition-colors hover:bg-cloud hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 >
                   <Icon name="close" className="h-5 w-5" />
                 </button>
-                {/* key ensures a fresh journey (and fresh confirmation state) per open */}
+                {/* key ensures a fresh journey (and fresh confirmation state) per open.
+                    The onboarding owns its scrollable body + pinned footer bar. */}
                 <QuoteOnboarding
                   key={openCount}
                   preselectedSlugs={slugs}

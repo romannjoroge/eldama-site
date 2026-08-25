@@ -262,6 +262,11 @@ export const services: Service[] = [
           "Cloud backup for servers, workstations, and Microsoft 365 — automated, monitored, and tested by our team.",
       },
       {
+        name: "Acronis",
+        description:
+          "Cyber protection and backup for servers, workstations, and Microsoft 365 — automated and instantly recoverable.",
+      },
+      {
         name: "Private Cloud",
         description:
           "Fully managed hosting environments.",
@@ -295,6 +300,11 @@ export const services: Service[] = [
         name: "Check Point Harmony Email & Collaboration",
         description:
           "AI-driven protection for email and collaboration apps that blocks phishing, malware, and account takeover attempts in real time.",
+      },
+      {
+        name: "Mimecast",
+        description:
+          "Cloud-based email security that filters malicious attachments, links, and impersonation attempts before they reach your inbox.",
       },
       {
         name: "Anti-phishing & impersonation defence",

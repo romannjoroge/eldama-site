@@ -1,17 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, type Variants } from "motion/react";
 import { useFetcher } from "react-router";
 
 import { Icon } from "~/components/icons";
 import type { QuoteFormResult } from "~/components/quote-form";
 import { EASE, fadeUpItem, makeStagger } from "~/components/motion";
+import { iconForTool, shortToolName } from "~/components/tech";
 import { formatResponseTime, services, type ServiceSlug } from "~/data/site";
 
-const TOTAL_STEPS = 4;
+const TOTAL_STEPS = 5;
 
-const STEP_LABELS = ["Welcome", "What you need", "Your details", "Your message"];
+const STEP_LABELS = [
+  "Welcome",
+  "What you need",
+  "Technologies",
+  "Your details",
+  "Your message",
+];
 
 const stepPanel: Variants = {
   initial: { opacity: 0, x: 28 },
@@ -26,9 +33,9 @@ interface QuoteOnboardingProps {
 }
 
 /**
- * Modal-only quote flow: a paced, four-step onboarding journey (welcome →
- * services → contact → message → confirmation) that keeps the user invested
- * in the request rather than dumping a flat form on them.
+ * Modal-only quote flow: a paced, multi-step onboarding (welcome → services →
+ * technologies → contact → message → confirmation). The technologies step lets
+ * sophisticated buyers dial in exactly which products they need.
  */
 export function QuoteOnboarding({
   preselectedSlugs = [],
@@ -39,20 +46,73 @@ export function QuoteOnboarding({
 
   const [step, setStep] = useState(1);
   const [selected, setSelected] = useState<ServiceSlug[]>(preselectedSlugs);
+  const [techs, setTechs] = useState<string[]>([]);
   const [name, setName] = useState("");
   const [company, setCompany] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [need, setNeed] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollMore, setCanScrollMore] = useState(false);
 
   const submitted = fetcher.data?.ok ? fetcher.data : undefined;
   const pending = fetcher.state !== "idle";
 
-  const toggleService = (slug: ServiceSlug) =>
-    setSelected((prev) =>
-      prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug],
+  const updateScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    setCanScrollMore(el.scrollHeight - el.scrollTop - el.clientHeight > 24);
+  }, []);
+
+  // Keep the scroll cue accurate as steps change height and on scroll/resize.
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    updateScroll();
+    const content = el.firstElementChild;
+    const ro = new ResizeObserver(updateScroll);
+    if (content) ro.observe(content);
+    window.addEventListener("resize", updateScroll);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", updateScroll);
+    };
+  }, [updateScroll]);
+
+  const selectedServices = services.filter((s) => selected.includes(s.slug));
+
+  const toggleService = (slug: ServiceSlug) => {
+    setError(null);
+    setSelected((prev) => {
+      if (prev.includes(slug)) {
+        // Drop any techs belonging to a deselected service.
+        const svc = services.find((s) => s.slug === slug);
+        if (svc) {
+          setTechs((t) => t.filter((name) => !svc.tools.some((tool) => tool.name === name)));
+        }
+        return prev.filter((s) => s !== slug);
+      }
+      return [...prev, slug];
+    });
+  };
+
+  const toggleTech = (name: string) => {
+    setError(null);
+    setTechs((prev) =>
+      prev.includes(name) ? prev.filter((t) => t !== name) : [...prev, name],
     );
+  };
+
+  const selectAllTechs = () => {
+    setTechs((prev) => {
+      const all = selectedServices.flatMap((s) => s.tools.map((t) => t.name));
+      const set = new Set([...prev, ...all]);
+      return Array.from(set);
+    });
+  };
+
+  const clearTechs = () => setTechs([]);
 
   const next = () => {
     setError(null);
@@ -60,7 +120,7 @@ export function QuoteOnboarding({
       setError("Select at least one service to continue.");
       return;
     }
-    if (step === 3) {
+    if (step === 4) {
       if (name.trim() === "" || email.trim() === "") {
         setError("Please enter your name and work email.");
         return;
@@ -86,7 +146,7 @@ export function QuoteOnboarding({
       return;
     }
     if (name.trim() === "" || email.trim() === "") {
-      setStep(3);
+      setStep(4);
       setError("Please enter your name and work email.");
       return;
     }
@@ -96,136 +156,179 @@ export function QuoteOnboarding({
     formData.append("email", email);
     formData.append("phone", phone);
     selected.forEach((slug) => formData.append("services", slug));
+    techs.forEach((t) => formData.append("techs", t));
     formData.append("need", need);
     fetcher.submit(formData, { method: "post", action: "/quote" });
   };
 
   const canContinue =
-    step === 1
-      ? true
-      : step === 2
-        ? selected.length > 0
-        : name.trim() !== "" && email.includes("@");
+    step === 2
+      ? selected.length > 0
+      : step === 4
+        ? name.trim() !== "" && email.includes("@")
+        : true;
 
   return (
-    <div>
-      {/* Progress header */}
-      <div className="mb-6 pr-12">
-        <div className="flex items-center justify-between text-[12px] text-graphite">
-          <span className="font-medium uppercase tracking-[0.1em]">
-            Step {Math.min(step, TOTAL_STEPS)} of {TOTAL_STEPS}
-          </span>
-          <span className="font-semibold text-ink">
-            {STEP_LABELS[Math.min(step, TOTAL_STEPS) - 1] ?? ""}
-          </span>
-        </div>
-        <div className="mt-2.5 flex gap-1.5" aria-hidden="true">
-          {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
-            <div key={i} className="h-1 flex-1 overflow-hidden rounded-full bg-fog">
-              <motion.div
-                className="h-full rounded-full bg-primary-bright"
-                style={{ transformOrigin: "left" }}
-                initial={{ scaleX: 0 }}
-                animate={{ scaleX: step > i ? 1 : 0 }}
-                transition={{ duration: 0.45, ease: EASE, delay: 0.05 }}
-              />
+    <>
+      {/* Scrollable step body — a DIRECT flex child of the panel so it shrinks
+          to fit and scrolls (no nested flex-basis/% height chain). */}
+      <div
+        ref={scrollRef}
+        onScroll={updateScroll}
+        data-lenis-prevent
+        className="relative min-h-0 overflow-y-auto overscroll-contain scroll-modal"
+      >
+        <div className="p-6 sm:p-8">
+          {/* Progress header */}
+          <div className="mb-6 pr-12">
+            <div className="flex items-center justify-between text-[12px] text-graphite">
+              <span className="font-medium uppercase tracking-[0.1em]">
+                Step {Math.min(step, TOTAL_STEPS)} of {TOTAL_STEPS}
+              </span>
+              <span className="font-semibold text-ink">
+                {STEP_LABELS[Math.min(step, TOTAL_STEPS) - 1] ?? ""}
+              </span>
             </div>
-          ))}
+            <div className="mt-2.5 flex gap-1.5" aria-hidden="true">
+              {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
+                <div key={i} className="h-1 flex-1 overflow-hidden rounded-full bg-fog">
+                  <motion.div
+                    className="h-full rounded-full bg-primary-bright"
+                    style={{ transformOrigin: "left" }}
+                    initial={{ scaleX: 0 }}
+                    animate={{ scaleX: step > i ? 1 : 0 }}
+                    transition={{ duration: 0.45, ease: EASE, delay: 0.05 }}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <AnimatePresence mode="wait" initial={false}>
+            {submitted ? (
+              <motion.div key="confirmation" {...stepPanel}>
+                <Confirmation
+                  submittedAt={submitted.submittedAt ?? ""}
+                  onClose={onClose}
+                />
+              </motion.div>
+            ) : (
+              <motion.div key={step} {...stepPanel}>
+                {step === 1 && <WelcomeStep onStart={next} />}
+                {step === 2 && (
+                  <ServicesStep selected={selected} onToggle={toggleService} />
+                )}
+                {step === 3 && (
+                  <TechnologiesStep
+                    services={selectedServices}
+                    techs={techs}
+                    onToggle={toggleTech}
+                    onSelectAll={selectAllTechs}
+                    onClear={clearTechs}
+                  />
+                )}
+                {step === 4 && (
+                  <ContactStep
+                    name={name}
+                    setName={setName}
+                    company={company}
+                    setCompany={setCompany}
+                    email={email}
+                    setEmail={setEmail}
+                    phone={phone}
+                    setPhone={setPhone}
+                  />
+                )}
+                {step === 5 && (
+                  <ScopeStep
+                    need={need}
+                    setNeed={setNeed}
+                    selectedServices={selectedServices}
+                    techs={techs}
+                    goBackToServices={() => setStep(2)}
+                    goBackToTechs={() => setStep(3)}
+                  />
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {error && !submitted && (
+            <motion.p
+              initial={{ opacity: 0, y: -6 }}
+              animate={{ opacity: 1, y: 0 }}
+              role="alert"
+              className="mt-4 rounded-[8px] bg-error/10 px-3 py-2 text-[14px] font-medium text-error"
+            >
+              {error}
+            </motion.p>
+          )}
         </div>
+
+        {/* Scroll cue — only when there's more content to scroll */}
+        {canScrollMore && (
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex items-end justify-center"
+          >
+            <div className="h-14 w-full bg-gradient-to-t from-white via-white/70 to-transparent" />
+            <motion.div
+              animate={{ y: [0, 5, 0] }}
+              transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute bottom-2 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-white shadow-md"
+            >
+              <Icon name="arrow" className="h-3.5 w-3.5 rotate-90" />
+            </motion.div>
+          </div>
+        )}
       </div>
 
-      <AnimatePresence mode="wait" initial={false}>
-        {submitted ? (
-          <motion.div key="confirmation" {...stepPanel}>
-            <Confirmation
-              submittedAt={submitted.submittedAt ?? ""}
-              onClose={onClose}
-            />
-          </motion.div>
-        ) : (
-          <motion.div key={step} {...stepPanel}>
-            {step === 1 && <WelcomeStep onStart={next} />}
-            {step === 2 && (
-              <ServicesStep selected={selected} onToggle={toggleService} />
-            )}
-            {step === 3 && (
-              <ContactStep
-                name={name}
-                setName={setName}
-                company={company}
-                setCompany={setCompany}
-                email={email}
-                setEmail={setEmail}
-                phone={phone}
-                setPhone={setPhone}
-              />
-            )}
-            {step === 4 && (
-              <ScopeStep
-                need={need}
-                setNeed={setNeed}
-                selected={selected}
-                goBackToServices={() => setStep(2)}
-              />
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {error && !submitted && (
-        <motion.p
-          initial={{ opacity: 0, y: -6 }}
-          animate={{ opacity: 1, y: 0 }}
-          role="alert"
-          className="mt-4 rounded-[8px] bg-error/10 px-3 py-2 text-[14px] font-medium text-error"
-        >
-          {error}
-        </motion.p>
-      )}
-
+      {/* Pinned footer bar — always visible, never pushed off-screen */}
       {!submitted && step > 1 && (
-        <div className="mt-6 flex items-center justify-between gap-3 border-t border-hairline pt-5">
-          <button type="button" onClick={back} className="btn-outline-ink !h-11">
-            <Icon name="arrow" className="h-4 w-4 rotate-180" />
-            Back
-          </button>
+        <div className="shrink-0 border-t border-hairline bg-white px-6 py-4 sm:px-8 sm:py-5">
+          <div className="flex items-center justify-between gap-3">
+            <button type="button" onClick={back} className="btn-outline-ink !h-11">
+              <Icon name="arrow" className="h-4 w-4 rotate-180" />
+              Back
+            </button>
 
-          {step < TOTAL_STEPS ? (
-            <motion.button
-              type="button"
-              onClick={next}
-              disabled={!canContinue}
-              whileHover={{ y: -2 }}
-              whileTap={{ scale: 0.97 }}
-              className="btn-primary group !h-11 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              Continue
-              <Icon
-                name="arrow"
-                className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1"
-              />
-            </motion.button>
-          ) : (
-            <motion.button
-              type="button"
-              onClick={submit}
-              disabled={pending}
-              whileHover={{ y: -2 }}
-              whileTap={{ scale: 0.97 }}
-              className="btn-primary group !h-11 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {pending ? "Sending…" : "Request my quote"}
-              {!pending && (
+            {step < TOTAL_STEPS ? (
+              <motion.button
+                type="button"
+                onClick={next}
+                disabled={!canContinue}
+                whileHover={{ y: -2 }}
+                whileTap={{ scale: 0.97 }}
+                className="btn-primary group !h-11 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Continue
                 <Icon
                   name="arrow"
                   className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1"
                 />
-              )}
-            </motion.button>
-          )}
+              </motion.button>
+            ) : (
+              <motion.button
+                type="button"
+                onClick={submit}
+                disabled={pending}
+                whileHover={{ y: -2 }}
+                whileTap={{ scale: 0.97 }}
+                className="btn-primary group !h-11 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {pending ? "Sending…" : "Request my quote"}
+                {!pending && (
+                  <Icon
+                    name="arrow"
+                    className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1"
+                  />
+                )}
+              </motion.button>
+            )}
+          </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
 
@@ -267,15 +370,15 @@ function WelcomeStep({ onStart }: { onStart: () => void }) {
         <span className="text-primary">properly.</span>
       </motion.h3>
       <motion.p variants={fadeUpItem} className="mt-3 text-[15px] leading-relaxed text-charcoal">
-        Four quick questions. A certified specialist — not a sales agent —
-        reviews your request and comes back within{" "}
+        Five quick steps. A certified specialist — not a sales agent — reviews
+        your request and comes back within{" "}
         <span className="font-semibold text-ink">{formatResponseTime()}</span>{" "}
         with scope, recommendations, and pricing.
       </motion.p>
       <motion.ul variants={makeStagger(0.08, 0.2)} className="mt-5 space-y-2.5">
         {[
           "Under a minute to complete",
-          "One accountable partner across the whole stack",
+          "Pinpoint the exact technologies you need",
           "No obligation — details used only for your quote",
         ].map((line) => (
           <motion.li
@@ -378,6 +481,92 @@ function ServicesStep({
   );
 }
 
+function TechnologiesStep({
+  services: svcs,
+  techs,
+  onToggle,
+  onSelectAll,
+  onClear,
+}: {
+  services: (typeof services)[number][];
+  techs: string[];
+  onToggle: (name: string) => void;
+  onSelectAll: () => void;
+  onClear: () => void;
+}) {
+  return (
+    <div>
+      <StepTitle
+        title="Which technologies do you need?"
+        sub="Optional — dial in the exact products so your quote is scoped precisely."
+      />
+      <motion.div
+        variants={makeStagger(0.06, 0.1)}
+        initial="hidden"
+        animate="show"
+        className="mt-5"
+      >
+        <motion.div variants={fadeUpItem} className="mb-3 flex items-center justify-end gap-3">
+          <button
+            type="button"
+            onClick={onSelectAll}
+            className="text-[13px] font-medium text-primary underline-offset-2 hover:underline"
+          >
+            Select all
+          </button>
+          <button
+            type="button"
+            onClick={onClear}
+            className="text-[13px] font-medium text-graphite underline-offset-2 hover:text-ink hover:underline"
+          >
+            Clear
+          </button>
+        </motion.div>
+
+        {svcs.map((service) => (
+          <motion.div key={service.slug} variants={fadeUpItem} className="mb-4 last:mb-0">
+            <div className="flex items-center gap-2 text-[12px] font-semibold uppercase tracking-[0.1em] text-graphite">
+              <span className="flex h-5 w-5 items-center justify-center rounded-[4px] bg-ink text-white">
+                <Icon name={service.icon} className="h-3 w-3" />
+              </span>
+              {service.name}
+            </div>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {service.tools.map((tool) => {
+                const active = techs.includes(tool.name);
+                return (
+                  <button
+                    key={tool.name}
+                    type="button"
+                    onClick={() => onToggle(tool.name)}
+                    className={`inline-flex items-center gap-1.5 rounded-[6px] border px-2.5 py-1.5 text-[12px] font-medium transition-colors duration-150 ${
+                      active
+                        ? "border-primary bg-primary-soft text-ink"
+                        : "border-hairline bg-white text-charcoal hover:border-steel"
+                    }`}
+                  >
+                    <Icon
+                      name={iconForTool(tool.name)}
+                      className={`h-3.5 w-3.5 ${active ? "text-primary" : "text-graphite"}`}
+                    />
+                    {shortToolName(tool.name)}
+                    {active && <Icon name="check" className="h-3 w-3 text-primary" />}
+                  </button>
+                );
+              })}
+            </div>
+          </motion.div>
+        ))}
+      </motion.div>
+      <p className="mt-3 text-[12px] text-graphite">
+        {techs.length === 0
+          ? "No specific products selected — we'll recommend the right ones"
+          : `${techs.length} technologie${techs.length === 1 ? "y" : "s"} selected`}
+      </p>
+    </div>
+  );
+}
+
 function ContactStep({
   name,
   setName,
@@ -469,18 +658,18 @@ function ContactStep({
 function ScopeStep({
   need,
   setNeed,
-  selected,
+  selectedServices,
+  techs,
   goBackToServices,
+  goBackToTechs,
 }: {
   need: string;
   setNeed: (v: string) => void;
-  selected: ServiceSlug[];
+  selectedServices: (typeof services)[number][];
+  techs: string[];
   goBackToServices: () => void;
+  goBackToTechs: () => void;
 }) {
-  const names = services
-    .filter((s) => selected.includes(s.slug))
-    .map((s) => s.name);
-
   return (
     <div>
       <StepTitle
@@ -498,25 +687,26 @@ function ScopeStep({
           <textarea
             id="onb-need"
             name="need"
-            rows={4}
+            rows={3}
             className="input mt-1.5 resize-y"
             placeholder="e.g. We have 40 staff, need a Microsoft 365 migration and better email security…"
             value={need}
             onChange={(e) => setNeed(e.target.value)}
           />
         </motion.div>
-        <motion.div variants={fadeUpItem} className="mt-5">
+
+        <motion.div variants={fadeUpItem} className="mt-4">
           <p className="text-[12px] font-semibold uppercase tracking-[0.1em] text-graphite">
             Selected services
           </p>
           <div className="mt-2 flex flex-wrap items-center gap-2">
-            {names.map((name) => (
+            {selectedServices.map((s) => (
               <span
-                key={name}
+                key={s.slug}
                 className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary-soft px-3 py-1.5 text-[13px] font-medium text-ink"
               >
-                <Icon name="check" className="h-3.5 w-3.5 text-primary" />
-                {name}
+                <Icon name={s.icon} className="h-3.5 w-3.5 text-primary" />
+                {s.name}
               </span>
             ))}
             <button
@@ -528,6 +718,32 @@ function ScopeStep({
             </button>
           </div>
         </motion.div>
+
+        {techs.length > 0 && (
+          <motion.div variants={fadeUpItem} className="mt-3">
+            <p className="text-[12px] font-semibold uppercase tracking-[0.1em] text-graphite">
+              Selected technologies
+            </p>
+            <div className="mt-2 flex flex-wrap items-center gap-1.5">
+              {techs.map((t) => (
+                <span
+                  key={t}
+                  className="inline-flex items-center gap-1 rounded-[6px] border border-hairline bg-white px-2 py-1 text-[12px] font-medium text-charcoal"
+                >
+                  <Icon name={iconForTool(t)} className="h-3.5 w-3.5 text-primary" />
+                  {shortToolName(t)}
+                </span>
+              ))}
+              <button
+                type="button"
+                onClick={goBackToTechs}
+                className="text-[13px] font-medium text-primary underline-offset-2 hover:underline"
+              >
+                Edit
+              </button>
+            </div>
+          </motion.div>
+        )}
       </motion.div>
     </div>
   );
@@ -592,7 +808,7 @@ function Confirmation({
 
       <motion.ul variants={makeStagger(0.1, 0.4)} className="mx-auto mt-6 max-w-sm space-y-2 text-left">
         {[
-          ["1", "Specialist reviews your request"],
+          ["1", "Specialist reviews your request & technologies"],
           ["2", "Recommendations & scope confirmation"],
           ["3", "Tailored quote, no obligation"],
         ].map(([n, label]) => (
