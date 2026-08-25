@@ -1,14 +1,22 @@
 import { useState } from "react";
+import { AnimatePresence, motion, useMotionValueEvent, useScroll } from "motion/react";
 import { NavLink } from "react-router";
 
 import { Icon } from "~/components/icons";
 import { Logo } from "~/components/logo";
+import { EASE } from "~/components/motion";
 import { useQuote } from "~/components/quote-modal";
 import { company, navLinks } from "~/data/site";
 
 export function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const { openQuote } = useQuote();
+  const { scrollY } = useScroll();
+
+  useMotionValueEvent(scrollY, "change", (latest) => {
+    setScrolled(latest > 8);
+  });
 
   return (
     <>
@@ -37,7 +45,16 @@ export function Header() {
         </div>
       </div>
 
-      <header className="sticky top-0 z-40 border-b border-hairline bg-white">
+      <motion.header
+        initial={{ y: -24, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.45, ease: EASE }}
+        className={`sticky top-0 z-40 border-b bg-white/90 backdrop-blur-md transition-shadow duration-300 ${
+          scrolled
+            ? "border-hairline shadow-[0_4px_24px_rgba(26,26,26,0.08)]"
+            : "border-transparent"
+        }`}
+      >
         <div className="container-site flex h-16 items-center justify-between gap-4">
           <Logo />
 
@@ -48,14 +65,27 @@ export function Header() {
                   <NavLink
                     to={link.href}
                     className={({ isActive }) =>
-                      `inline-flex h-16 items-center px-3 text-[15px] font-medium transition-colors ${
-                        isActive
-                          ? "text-ink shadow-[inset_0_-2px_0_0_#024ad8]"
-                          : "text-charcoal hover:text-ink"
+                      `relative inline-flex h-16 items-center px-3 text-[15px] font-medium transition-colors ${
+                        isActive ? "text-ink" : "text-charcoal hover:text-ink"
                       }`
                     }
                   >
-                    {link.label}
+                    {({ isActive }) => (
+                      <>
+                        {link.label}
+                        {isActive && (
+                          <motion.span
+                            layoutId="nav-underline"
+                            className="absolute inset-x-3 bottom-0 h-[2px] bg-primary"
+                            transition={{
+                              type: "spring",
+                              stiffness: 380,
+                              damping: 30,
+                            }}
+                          />
+                        )}
+                      </>
+                    )}
                   </NavLink>
                 </li>
               ))}
@@ -78,49 +108,64 @@ export function Header() {
               aria-label={menuOpen ? "Close menu" : "Open menu"}
               className="flex h-11 w-11 items-center justify-center rounded-[4px] text-ink transition-colors hover:bg-cloud lg:hidden"
             >
-              <Icon name={menuOpen ? "close" : "menu"} className="h-6 w-6" />
+              <motion.span
+                key={menuOpen ? "close" : "menu"}
+                initial={{ rotate: -90, opacity: 0, scale: 0.6 }}
+                animate={{ rotate: 0, opacity: 1, scale: 1 }}
+                transition={{ duration: 0.25, ease: EASE }}
+                className="flex"
+              >
+                <Icon name={menuOpen ? "close" : "menu"} className="h-6 w-6" />
+              </motion.span>
             </button>
           </div>
         </div>
 
-        {menuOpen && (
-          <nav
-            id="mobile-menu"
-            aria-label="Mobile"
-            className="border-t border-hairline bg-white lg:hidden"
-          >
-            <ul className="container-site space-y-1 py-3">
-              {navLinks.map((link) => (
-                <li key={link.href}>
-                  <NavLink
-                    to={link.href}
-                    onClick={() => setMenuOpen(false)}
-                    className={({ isActive }) =>
-                      `block px-3 py-3 text-[17px] font-medium ${
-                        isActive ? "text-primary" : "text-ink hover:text-primary"
-                      }`
-                    }
+        <AnimatePresence>
+          {menuOpen && (
+            <motion.nav
+              key="mobile-menu"
+              id="mobile-menu"
+              aria-label="Mobile"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.28, ease: EASE }}
+              className="overflow-hidden border-t border-hairline bg-white lg:hidden"
+            >
+              <ul className="container-site space-y-1 py-3">
+                {navLinks.map((link) => (
+                  <li key={link.href}>
+                    <NavLink
+                      to={link.href}
+                      onClick={() => setMenuOpen(false)}
+                      className={({ isActive }) =>
+                        `block px-3 py-3 text-[17px] font-medium ${
+                          isActive ? "text-primary" : "text-ink hover:text-primary"
+                        }`
+                      }
+                    >
+                      {link.label}
+                    </NavLink>
+                  </li>
+                ))}
+                <li className="pt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      openQuote();
+                    }}
+                    className="btn-primary w-full"
                   >
-                    {link.label}
-                  </NavLink>
+                    Get a Quote
+                  </button>
                 </li>
-              ))}
-              <li className="pt-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMenuOpen(false);
-                    openQuote();
-                  }}
-                  className="btn-primary w-full"
-                >
-                  Get a Quote
-                </button>
-              </li>
-            </ul>
-          </nav>
-        )}
-      </header>
+              </ul>
+            </motion.nav>
+          )}
+        </AnimatePresence>
+      </motion.header>
     </>
   );
 }

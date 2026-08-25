@@ -1,3 +1,4 @@
+import { MotionConfig } from "motion/react";
 import {
   isRouteErrorResponse,
   Links,
@@ -11,7 +12,10 @@ import type { Route } from "./+types/root";
 import { Footer } from "./components/footer";
 import { Header } from "./components/header";
 import { Icon } from "./components/icons";
+import { IntroProvider } from "./components/intro";
 import { QuoteProvider, useQuote } from "./components/quote-modal";
+import { ScrollProgress } from "./components/scroll-progress";
+import { SmoothScroll } from "./components/smooth-scroll";
 import "./app.css";
 
 export const links: Route.LinksFunction = () => [
@@ -23,7 +27,7 @@ export const links: Route.LinksFunction = () => [
   },
   {
     rel: "stylesheet",
-    href: "https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap",
+    href: "https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap",
   },
 ];
 
@@ -47,16 +51,24 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   return (
-    <QuoteProvider>
-      <div className="flex min-h-screen flex-col">
-        <Header />
-        <main className="flex-1">
-          <Outlet />
-        </main>
-        <Footer />
-        <MobileQuoteBar />
-      </div>
-    </QuoteProvider>
+    <MotionConfig reducedMotion="user">
+      <QuoteProvider>
+        <SmoothScroll>
+          <IntroProvider>
+            <div className="flex min-h-screen flex-col">
+              <ScrollProgress />
+              <Header />
+              <main className="flex-1">
+                <Outlet />
+              </main>
+              <Footer />
+              <MobileQuoteBar />
+            </div>
+            <div className="grain" aria-hidden="true" />
+          </IntroProvider>
+        </SmoothScroll>
+      </QuoteProvider>
+    </MotionConfig>
   );
 }
 

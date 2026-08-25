@@ -10,6 +10,8 @@ import {
   type ReactNode,
 } from "react";
 
+import { AnimatePresence, motion } from "motion/react";
+
 import { Icon } from "~/components/icons";
 import { QuoteForm } from "~/components/quote-form";
 import type { ServiceSlug } from "~/data/site";
@@ -90,43 +92,54 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
   return (
     <QuoteContext.Provider value={{ openQuote, closeQuote }}>
       {children}
-      {open && (
-        <div
-          className="fixed inset-0 z-50 overflow-y-auto"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Get a quote"
-        >
-          <div
-            className="fixed inset-0 bg-ink/70"
-            onClick={closeQuote}
-            aria-hidden="true"
-          />
-          <div className="flex min-h-full items-center justify-center p-4 sm:p-6">
-            <div
-              ref={panelRef}
-              tabIndex={-1}
-              className="relative w-full max-w-xl rounded-[16px] border border-hairline bg-white p-6 shadow-[0_8px_24px_rgba(26,26,26,0.12)] outline-none sm:p-8"
-            >
-              <button
-                type="button"
-                onClick={closeQuote}
-                aria-label="Close quote form"
-                className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-[4px] text-graphite transition-colors hover:bg-cloud hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            key="quote-dialog"
+            className="fixed inset-0 z-50 overflow-y-auto"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Get a quote"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+          >
+            <motion.div
+              className="fixed inset-0 bg-ink/70 backdrop-blur-[2px]"
+              onClick={closeQuote}
+              aria-hidden="true"
+            />
+            <div className="flex min-h-full items-center justify-center p-4 sm:p-6">
+              <motion.div
+                ref={panelRef}
+                tabIndex={-1}
+                initial={{ opacity: 0, scale: 0.95, y: 24 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.96, y: 12 }}
+                transition={{ type: "spring", stiffness: 320, damping: 28 }}
+                className="relative w-full max-w-xl rounded-[16px] border border-hairline bg-white p-6 shadow-[0_8px_24px_rgba(26,26,26,0.12)] outline-none sm:p-8"
               >
-                <Icon name="close" className="h-5 w-5" />
-              </button>
-              {/* key ensures a fresh form (and fresh confirmation state) per open */}
-              <QuoteForm
-                key={openCount}
-                preselectedSlugs={slugs}
-                fetcherKey="quote-modal"
-                idPrefix="modal"
-              />
+                <button
+                  type="button"
+                  onClick={closeQuote}
+                  aria-label="Close quote form"
+                  className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-[4px] text-graphite transition-colors hover:bg-cloud hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                >
+                  <Icon name="close" className="h-5 w-5" />
+                </button>
+                {/* key ensures a fresh form (and fresh confirmation state) per open */}
+                <QuoteForm
+                  key={openCount}
+                  preselectedSlugs={slugs}
+                  fetcherKey="quote-modal"
+                  idPrefix="modal"
+                />
+              </motion.div>
             </div>
-          </div>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </QuoteContext.Provider>
   );
 }

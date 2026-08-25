@@ -4,6 +4,10 @@
   --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 
+  /* Techy display face used for the big marquee band, preloader, and stat numerals */
+  --font-display: "Space Grotesk", "Manrope", ui-sans-serif, system-ui,
+    sans-serif;
+
   /* =====================================================================
      HP-inspired design tokens (see DESIGN-hp.md).
      Swap these values when the real brand assets arrive - colors are only
@@ -56,6 +60,154 @@ html {
   html {
     scroll-behavior: auto;
   }
+
+  .marquee-track,
+  .grain,
+  .animate-aurora-slow,
+  .animate-aurora-slower,
+  .dash-flow {
+    animation: none;
+  }
+}
+
+html {
+  scroll-padding-top: 6rem;
+}
+
+/* =====================================================================
+   Marquee — infinite partner-badge ticker in the trust bar.
+   The track holds two identical copies so translating -50% loops seamlessly.
+   ===================================================================== */
+@keyframes eldama-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.marquee-mask {
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    black 10%,
+    black 90%,
+    transparent
+  );
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent,
+    black 10%,
+    black 90%,
+    transparent
+  );
+}
+
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: eldama-marquee var(--marquee-speed, 36s) linear infinite;
+  will-change: transform;
+}
+
+.marquee-group:hover .marquee-track,
+.marquee-group:focus-within .marquee-track {
+  animation-play-state: paused;
+}
+
+/* =====================================================================
+   Aurora — drifting blurred colour blobs for dark section backdrops.
+   ===================================================================== */
+@keyframes aurora-move {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(40px, -50px) scale(1.15);
+  }
+  66% {
+    transform: translate(-30px, 40px) scale(0.9);
+  }
+}
+
+.animate-aurora-slow {
+  animation: aurora-move 14s ease-in-out infinite;
+  will-change: transform;
+}
+
+.animate-aurora-slower {
+  animation: aurora-move 22s ease-in-out infinite reverse;
+  will-change: transform;
+}
+
+/* =====================================================================
+   Faint blueprint grid for dark hero/CTA backdrops.
+   ===================================================================== */
+.bg-grid {
+  background-image: linear-gradient(
+      to right,
+      rgba(255, 255, 255, 0.06) 1px,
+      transparent 1px
+    ),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  background-size: 56px 56px;
+}
+
+/* =====================================================================
+   Film grain overlay — adds texture so flat colour bands stop feeling sterile.
+   ===================================================================== */
+.grain {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  pointer-events: none;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.7'/%3E%3C/svg%3E");
+  animation: grain-shift 9s steps(10) infinite;
+}
+
+@keyframes grain-shift {
+  0%,
+  100% {
+    background-position: 0 0;
+  }
+  20% {
+    background-position: -30px 20px;
+  }
+  40% {
+    background-position: 20px -30px;
+  }
+  60% {
+    background-position: -20px -20px;
+  }
+  80% {
+    background-position: 30px 30px;
+  }
+}
+
+/* =====================================================================
+   Outlined display text for the big marquee band.
+   ===================================================================== */
+.text-stroke-ink {
+  -webkit-text-stroke: 1.5px var(--color-ink);
+  color: transparent;
+}
+
+/* =====================================================================
+   Flowing dash animation for the coverage network diagram.
+   ===================================================================== */
+@keyframes dash-flow {
+  to {
+    stroke-dashoffset: -24;
+  }
+}
+
+.dash-flow {
+  animation: dash-flow 1.8s linear infinite;
+  will-change: stroke-dashoffset;
 }
 
 @layer components {
@@ -104,11 +256,11 @@ html {
   }
 
   .h-display {
-    @apply text-[clamp(2.35rem,5.2vw,4.5rem)] font-medium leading-[1.02] tracking-normal text-ink;
+    @apply text-[clamp(2.6rem,6vw,5rem)] font-semibold leading-[1.02] tracking-[-0.02em] text-ink;
   }
 
   .h-section {
-    @apply text-[clamp(1.85rem,3.4vw,2.75rem)] font-medium leading-[1.05] tracking-normal text-ink;
+    @apply text-[clamp(1.9rem,3.6vw,2.9rem)] font-semibold leading-[1.05] tracking-[-0.01em] text-ink;
   }
 
   .h-card {
