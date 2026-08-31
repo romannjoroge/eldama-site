@@ -110,10 +110,10 @@ function MobileQuoteBar() {
       <button
         type="button"
         onClick={() => openQuote()}
-        className="btn-primary w-full"
+        className="btn-primary w-full !h-10 !text-[13px]"
       >
         Get a Quote
-        <Icon name="arrow" className="h-4 w-4" />
+        <Icon name="arrow" className="h-3.5 w-3.5" />
       </button>
     </div>
   );

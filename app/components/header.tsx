@@ -144,24 +144,27 @@ export function Header() {
           </nav>
 
           <div className="flex items-center gap-2">
-            <Magnetic strength={0.25}>
-              <motion.button
-                type="button"
-                onClick={() => openQuote()}
-                whileTap={{ scale: 0.96 }}
-                className="btn-primary group relative !h-10 overflow-hidden !px-5"
-              >
-                <span
-                  aria-hidden="true"
-                  className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/30 to-transparent transition-transform duration-700 group-hover:translate-x-full"
-                />
-                <span className="relative">Get a Quote</span>
-                <Icon
-                  name="arrow"
-                  className="relative h-4 w-4 transition-transform duration-200 group-hover:translate-x-1"
-                />
-              </motion.button>
-            </Magnetic>
+            {/* CTA hidden on mobile — the fixed bottom bar handles that viewport */}
+            <div className="hidden md:block">
+              <Magnetic strength={0.25}>
+                <motion.button
+                  type="button"
+                  onClick={() => openQuote()}
+                  whileTap={{ scale: 0.96 }}
+                  className="btn-primary group relative !h-9 overflow-hidden !px-4 !text-[13px]"
+                >
+                  <span
+                    aria-hidden="true"
+                    className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/30 to-transparent transition-transform duration-700 group-hover:translate-x-full"
+                  />
+                  <span className="relative">Get a Quote</span>
+                  <Icon
+                    name="arrow"
+                    className="relative h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-1"
+                  />
+                </motion.button>
+              </Magnetic>
+            </div>
 
             <button
               type="button"
@@ -221,17 +224,13 @@ export function Header() {
                   </motion.li>
                 ))}
                 <motion.li variants={menuItem} className="pt-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMenuOpen(false);
-                      openQuote();
-                    }}
-                    className="btn-primary w-full"
+                  <a
+                    href="#services"
+                    onClick={() => setMenuOpen(false)}
+                    className="block px-3 py-3 text-[17px] font-medium text-ink hover:text-primary"
                   >
-                    Get a Quote
-                    <Icon name="arrow" className="h-4 w-4" />
-                  </button>
+                    See our services
+                  </a>
                 </motion.li>
               </motion.ul>
             </motion.nav>
