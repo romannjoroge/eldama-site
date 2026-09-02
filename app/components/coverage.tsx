@@ -16,7 +16,7 @@ export function Coverage() {
         <SectionHeading
           eyebrow="Complete IT coverage"
           title="Most clients start with one service — and expand."
-          description="The five categories work together as one IT stack. A Microsoft 365 rollout naturally leads to endpoint protection; a new firewall leads to backup and disaster recovery. Start where the pain is, and let one accountable partner close the gaps."
+          description="Six service areas work together as one IT stack. A Microsoft 365 rollout naturally leads to endpoint protection; a new firewall leads to backup and disaster recovery; a cloud migration leads to DevOps. Start where the pain is, and let one accountable partner close the gaps."
           align="center"
           dark
         />
@@ -64,14 +64,10 @@ export function Coverage() {
           <Stagger
             stagger={0.08}
             className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:hidden"
-            aria-label="How the five service categories connect"
+            aria-label="How the service categories connect"
           >
-            {services.map((service, index) => (
-              <StaggerItem
-                key={service.slug}
-                variants={scaleItem}
-                className={index === 4 ? "col-span-2 sm:col-span-1" : undefined}
-              >
+            {services.map((service) => (
+              <StaggerItem key={service.slug} variants={scaleItem}>
                 <div className="h-full rounded-[16px] border border-white/10 bg-white/5 p-5">
                   <span className="flex h-10 w-10 items-center justify-center rounded-[4px] bg-white/10 text-primary-bright">
                     <Icon name={service.icon} className="h-5 w-5" />

@@ -158,38 +158,42 @@ export default function ServicePage({ loaderData }: Route.ComponentProps) {
               ))}
             </Stagger>
 
-            {/* Client proof */}
-            <Reveal y={16}>
-              <RevealHeading
-                text="Who uses this service"
-                className="mt-14 text-2xl font-semibold tracking-tight text-ink"
-                as="h2"
-              />
-            </Reveal>
-            <Stagger
-              stagger={0.1}
-              className="mt-6 grid gap-4 sm:grid-cols-2"
-            >
-              {service.clientProof.map((proof) => (
-                <StaggerItem key={proof.client} variants={scaleItem} className="h-full">
-                  <motion.div
-                    whileHover={{ y: -3 }}
-                    transition={{ type: "spring", stiffness: 320, damping: 24 }}
-                    className="card flex h-full items-center gap-4 p-5 transition-colors duration-300 hover:border-primary/30"
-                  >
-                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[4px] bg-ink text-base font-bold text-white">
-                      {proof.client.charAt(0)}
-                    </span>
-                    <div>
-                      <p className="font-semibold text-ink">
-                        {proof.client}
-                      </p>
-                      <p className="mt-0.5 text-[14px] text-charcoal">{proof.line}</p>
-                    </div>
-                  </motion.div>
-                </StaggerItem>
-              ))}
-            </Stagger>
+            {/* Client proof (only when a service has reference clients) */}
+            {service.clientProof.length > 0 && (
+              <>
+                <Reveal y={16}>
+                  <RevealHeading
+                    text="Who uses this service"
+                    className="mt-14 text-2xl font-semibold tracking-tight text-ink"
+                    as="h2"
+                  />
+                </Reveal>
+                <Stagger
+                  stagger={0.1}
+                  className="mt-6 grid gap-4 sm:grid-cols-2"
+                >
+                  {service.clientProof.map((proof) => (
+                    <StaggerItem key={proof.client} variants={scaleItem} className="h-full">
+                      <motion.div
+                        whileHover={{ y: -3 }}
+                        transition={{ type: "spring", stiffness: 320, damping: 24 }}
+                        className="card flex h-full items-center gap-4 p-5 transition-colors duration-300 hover:border-primary/30"
+                      >
+                        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[4px] bg-ink text-base font-bold text-white">
+                          {proof.client.charAt(0)}
+                        </span>
+                        <div>
+                          <p className="font-semibold text-ink">
+                            {proof.client}
+                          </p>
+                          <p className="mt-0.5 text-[14px] text-charcoal">{proof.line}</p>
+                        </div>
+                      </motion.div>
+                    </StaggerItem>
+                  ))}
+                </Stagger>
+              </>
+            )}
           </div>
 
           {/* Sticky CTA sidebar */}

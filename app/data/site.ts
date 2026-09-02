@@ -11,7 +11,8 @@ export type ServiceSlug =
   | "it-outsourcing"
   | "endpoint-security"
   | "cloud-services"
-  | "email-security";
+  | "email-security"
+  | "software-development";
 
 export interface Tool {
   name: string;
@@ -39,6 +40,7 @@ export type ServiceIconName =
   | "shield"
   | "cloud"
   | "mail"
+  | "code"
   | "quote"
   | "check"
   | "arrow"
@@ -131,7 +133,7 @@ export const services: Service[] = [
     description:
       "Your entire IT operation, outsourced. Eldama designs, procures, installs, and maintains the hardware, software, and network infrastructure your business runs on — including telco and firewall services from Fortinet and Sophos.",
     intro:
-      "One partner instead of five vendors. We own your helpdesk, your network, your device lifecycle, and your vendor relationships, with clear SLAs and a team that answers when you call.",
+      "One partner instead of juggling several vendors. We own your helpdesk, your network, your device lifecycle, and your vendor relationships, with clear SLAs and a team that answers when you call.",
     icon: "network",
     badge: "Fortinet & Sophos Partner",
     badges: ["Fortinet Partner", "Sophos Partner", "Telco Partner"],
@@ -328,6 +330,53 @@ export const services: Service[] = [
     ],
     crossSell: ["endpoint-security", "microsoft-365", "it-outsourcing"],
   },
+  {
+    slug: "software-development",
+    name: "Software Development & DevOps",
+    shortName: "DevOps & Development",
+    tagline: "Custom software, modern delivery pipelines, and cloud-native apps — engineered and operated by one accountable partner.",
+    description:
+      "From custom applications to CI/CD and infrastructure-as-code, Eldama designs, builds, and runs software delivery so your business ships faster with fewer surprises.",
+    intro:
+      "Your business runs on software — whether it is a custom tool your team depends on or the pipeline that ships your product. We scope, build, and operate cloud-native applications and DevOps practices as one accountable partner: code, containers, pipelines, and observability, backed by the same SLAs as the rest of your IT.",
+    icon: "code",
+    badge: "Azure DevOps Partner",
+    badges: ["Azure DevOps Partner", "Cloud-Native & Containers"],
+    tools: [
+      {
+        name: "Custom software development",
+        description:
+          "Web, mobile, and internal tools designed around how your business actually works — built, tested, and maintained by our engineers.",
+      },
+      {
+        name: "Cloud-native apps on Azure",
+        description:
+          "Applications architected for the cloud — scalable, resilient, and cost-efficient from day one.",
+      },
+      {
+        name: "CI/CD pipelines",
+        description:
+          "Automated build, test, and deployment with Azure DevOps and GitHub Actions so changes ship safely and often.",
+      },
+      {
+        name: "Containers & Kubernetes",
+        description:
+          "Docker and AKS deployment patterns that make your software portable, repeatable, and easy to scale.",
+      },
+      {
+        name: "Infrastructure as Code",
+        description:
+          "Terraform and Bicep templates that define your environment in code — versioned, reviewable, and reproducible.",
+      },
+      {
+        name: "Monitoring & observability",
+        description:
+          "Application and infrastructure monitoring so you see issues before your customers do, with alerting that reaches the right people.",
+      },
+    ],
+    clientProof: [],
+    crossSell: ["cloud-services", "microsoft-365", "it-outsourcing"],
+  },
 ];
 
 export function getService(slug: string | undefined) {
@@ -376,7 +425,7 @@ export const whyEldama = [
   },
   {
     icon: "layers" as ServiceIconName,
-    title: "One partner instead of five vendors",
+    title: "One partner, not many vendors",
     body: "One contract, one team, one escalation path. We coordinate the vendors so you never have to.",
   },
   {

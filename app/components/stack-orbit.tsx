@@ -14,19 +14,21 @@ const CENTER = 50;
 const RADIUS = 38;
 
 // Slightly irregular angles + radii so the ring feels hand-placed, not plotted.
-const ANGLE_JITTER = [0, 5, -4, 6, -3];
-const RADIUS_JITTER = [0, 2, -3, 3, -2];
+const ANGLE_JITTER = [0, 5, -4, 6, -3, -6];
+const RADIUS_JITTER = [0, 2, -3, 3, -2, 2];
 const DRIFT = [
   [0, -5],
   [4, 3],
   [-4, 4],
   [5, -3],
   [-3, -4],
+  [3, -2],
 ];
 
 function nodePosition(index: number) {
-  const angle = (-90 + index * 72 + ANGLE_JITTER[index]) * (Math.PI / 180);
-  const radius = RADIUS + RADIUS_JITTER[index];
+  const total = services.length;
+  const angle = (-90 + index * (360 / total) + ANGLE_JITTER[index % ANGLE_JITTER.length]) * (Math.PI / 180);
+  const radius = RADIUS + RADIUS_JITTER[index % RADIUS_JITTER.length];
   return {
     x: CENTER + radius * Math.cos(angle),
     y: CENTER + radius * Math.sin(angle),

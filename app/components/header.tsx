@@ -106,7 +106,7 @@ export function Header() {
                   <NavLink
                     to={link.href}
                     className={({ isActive }) =>
-                      `group relative inline-flex h-16 items-center px-3 text-[15px] font-medium transition-colors duration-300 ${
+                      `group relative inline-flex h-16 items-center px-2.5 text-[14px] font-medium transition-colors duration-300 xl:px-3 xl:text-[15px] ${
                         isActive
                           ? overDark
                             ? "text-white"
@@ -122,14 +122,14 @@ export function Header() {
                         {link.label}
                         <span
                           aria-hidden="true"
-                          className={`absolute inset-x-3 bottom-0 h-[2px] origin-left scale-x-0 rounded-full transition-transform duration-300 group-hover:scale-x-100 ${
+                          className={`absolute inset-x-2.5 bottom-0 h-[2px] origin-left scale-x-0 rounded-full transition-transform duration-300 group-hover:scale-x-100 xl:inset-x-3 ${
                             overDark ? "bg-primary-bright/60" : "bg-primary/50"
                           }`}
                         />
                         {isActive && (
                           <motion.span
                             layoutId="nav-underline"
-                            className={`absolute inset-x-3 bottom-0 h-[2px] rounded-full ${
+                            className={`absolute inset-x-2.5 bottom-0 h-[2px] rounded-full xl:inset-x-3 ${
                               overDark ? "bg-primary-bright" : "bg-primary"
                             }`}
                             transition={{ type: "spring", stiffness: 380, damping: 30 }}

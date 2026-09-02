@@ -1,5 +1,12 @@
-import { useState } from "react";
-import { AnimatePresence, motion, type Variants } from "motion/react";
+import { useRef, useState } from "react";
+import {
+  AnimatePresence,
+  motion,
+  useMotionValue,
+  useSpring,
+  useTransform,
+  type Variants,
+} from "motion/react";
 
 import { Icon } from "~/components/icons";
 import { useIntro } from "~/components/intro";
@@ -27,18 +34,66 @@ const consoleRow: Variants = {
   show: { opacity: 1, x: 0, transition: { duration: 0.5, ease: EASE } },
 };
 
+const LIGHT_SIZE = 460;
+
 export function Hero() {
   const { ready } = useIntro();
   const { openQuote } = useQuote();
   const [expanded, setExpanded] = useState<number | null>(null);
+  const sectionRef = useRef<HTMLElement>(null);
+
+  // Pointer light + depth parallax (transform-only, springs so it's cheap).
+  const mx = useMotionValue(-9999);
+  const my = useMotionValue(-9999);
+  const [hovering, setHovering] = useState(false);
+  const sx = useSpring(mx, { stiffness: 90, damping: 20, mass: 0.6 });
+  const sy = useSpring(my, { stiffness: 90, damping: 20, mass: 0.6 });
+  const lightX = useTransform(sx, (v) => v - LIGHT_SIZE / 2);
+  const lightY = useTransform(sy, (v) => v - LIGHT_SIZE / 2);
+  const aurX = useTransform(sx, (v) => (v === -9999 ? 0 : (v - 0) * -0.03));
+  const aurY = useTransform(sy, (v) => (v === -9999 ? 0 : (v - 0) * -0.03));
+
+  const onMouseMove = (e: React.MouseEvent) => {
+    const el = sectionRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    mx.set(e.clientX - rect.left);
+    my.set(e.clientY - rect.top);
+  };
 
   return (
-    <section data-dark className="relative overflow-hidden bg-ink text-white">
+    <section
+      ref={sectionRef}
+      onMouseMove={onMouseMove}
+      onMouseEnter={() => setHovering(true)}
+      onMouseLeave={() => {
+        setHovering(false);
+        mx.set(-9999);
+        my.set(-9999);
+      }}
+      data-dark
+      className="relative select-none overflow-hidden bg-ink text-white"
+    >
       {/* ===== Backdrop: aurora + live particle network + ambient occlusion ===== */}
       <div className="absolute inset-0" aria-hidden="true">
-        <div className="animate-aurora-slow absolute -left-32 -top-32 h-[520px] w-[520px] rounded-full bg-primary/40 blur-[130px]" />
-        <div className="animate-aurora-slower absolute -right-24 top-1/4 h-[440px] w-[440px] rounded-full bg-primary-bright/30 blur-[140px]" />
-        <ParticleField className="absolute inset-0 h-full w-full opacity-80" density={60} />
+        {/* Aurora blobs — outer layer carries cursor parallax, inner the drift */}
+        <motion.div style={{ x: aurX, y: aurY }} className="absolute -left-32 -top-32">
+          <div className="animate-aurora-slow h-[520px] w-[520px] rounded-full bg-primary/40 blur-[130px]" />
+        </motion.div>
+        <motion.div style={{ x: aurY, y: aurX }} className="absolute -right-24 top-1/4">
+          <div className="animate-aurora-slower h-[440px] w-[440px] rounded-full bg-primary-bright/30 blur-[140px]" />
+        </motion.div>
+        <ParticleField
+          className="absolute inset-0 h-full w-full opacity-80"
+          density={95}
+        />
+        {/* Pointer light — a soft glow that springs to the cursor */}
+        <motion.div
+          style={{ x: lightX, y: lightY, opacity: hovering ? 1 : 0 }}
+          className="pointer-events-none absolute left-0 top-0 h-[460px] w-[460px] rounded-full"
+        >
+          <div className="h-full w-full rounded-full bg-[radial-gradient(circle,rgba(41,110,249,0.22),rgba(41,110,249,0.06)_45%,transparent_70%)] blur-2xl" />
+        </motion.div>
         {/* Center glow pulls the eye to the copy */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_55%_at_50%_42%,rgba(41,110,249,0.12),transparent_65%)]" />
         {/* Ambient occlusion vignette — edges fall into darkness, network stays contained */}
@@ -66,7 +121,7 @@ export function Hero() {
               Certified across every service we offer
             </motion.p>
             <motion.p variants={fadeUpItem} className="eyebrow-light">
-              One partner. Five disciplines.
+              One partner. Six disciplines.
             </motion.p>
           </div>
 
@@ -100,7 +155,7 @@ export function Hero() {
                 Eldama is one certified partner for Microsoft 365, networking,
                 security, cloud, and email — so growing businesses get
                 enterprise-grade IT without building an in-house team or
-                juggling five vendors.
+                juggling multiple vendors.
               </motion.p>
 
               <motion.div
