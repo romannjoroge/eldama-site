@@ -1,11 +1,12 @@
 import type { CSSProperties } from "react";
 
 import { Reveal, Stagger, StaggerItem } from "~/components/motion";
-import { clients, partnerBadges } from "~/data/site";
+import { partnerLogos } from "~/components/partner-logos";
+import { clients } from "~/data/site";
 
 export function TrustBar() {
   return (
-    <section className="border-y border-hairline bg-white py-12">
+    <section className="border-y border-hairline bg-white pt-12 pb-14 sm:pb-16">
       <div className="container-site">
         <Reveal y={12}>
           <p className="text-center text-xs font-bold uppercase tracking-[0.14em] text-graphite">
@@ -13,11 +14,11 @@ export function TrustBar() {
           </p>
         </Reveal>
 
-        <Reveal y={12} delay={0.1} className="mt-5">
-          <div className="marquee-group marquee-mask overflow-hidden">
+        <Reveal y={12} delay={0.1} className="mt-6">
+          <div className="marquee-group marquee-mask overflow-hidden py-1">
             <div
               className="marquee-track"
-              style={{ "--marquee-speed": "38s" } as CSSProperties}
+              style={{ "--marquee-speed": "42s" } as CSSProperties}
             >
               {[0, 1].map((copy) => (
                 <ul
@@ -25,12 +26,17 @@ export function TrustBar() {
                   aria-hidden={copy === 1}
                   className="flex shrink-0 items-center"
                 >
-                  {partnerBadges.map((badge) => (
+                  {partnerLogos.map((partner) => (
                     <li
-                      key={badge}
-                      className="mr-3 whitespace-nowrap rounded-[8px] border border-hairline bg-cloud px-4 py-2 text-[14px] font-medium text-charcoal transition-colors hover:border-primary/40 hover:bg-primary-soft"
+                      key={partner.name}
+                      className="mr-3 flex shrink-0 items-center rounded-[10px] border border-hairline bg-white px-5 py-3.5 shadow-[0_1px_2px_rgba(26,26,26,0.05)]"
                     >
-                      {badge}
+                      <img
+                        src={partner.src}
+                        alt={`${partner.name} partner`}
+                        loading="lazy"
+                        className="block h-6 w-auto max-w-[150px] leading-none object-contain opacity-70 grayscale transition duration-300 hover:opacity-100 hover:grayscale-0 sm:h-7"
+                      />
                     </li>
                   ))}
                 </ul>
