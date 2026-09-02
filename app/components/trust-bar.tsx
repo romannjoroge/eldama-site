@@ -15,7 +15,8 @@ export function TrustBar() {
         </Reveal>
 
         <Reveal y={12} delay={0.1} className="mt-6">
-          <div className="marquee-group marquee-mask overflow-hidden py-1">
+          {/* Fixed-height band so a growing tile never shifts the section below */}
+          <div className="marquee-group marquee-mask flex h-20 items-center overflow-hidden">
             <div
               className="marquee-track"
               style={{ "--marquee-speed": "42s" } as CSSProperties}
@@ -29,13 +30,15 @@ export function TrustBar() {
                   {partnerLogos.map((partner) => (
                     <li
                       key={partner.name}
-                      className="mr-3 flex shrink-0 items-center rounded-[10px] border border-hairline bg-white px-5 py-3.5 shadow-[0_1px_2px_rgba(26,26,26,0.05)]"
+                      className="group relative mr-3 flex h-16 w-48 shrink-0 items-center justify-center rounded-[14px] border border-hairline bg-white transition-[width,height,border-color,box-shadow] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:h-20 hover:w-64 hover:border-fog hover:shadow-[0_16px_36px_rgba(26,26,26,0.14)] sm:w-56 sm:hover:w-72"
                     >
+                      {/* Equal-size tile — object-contain fits every logo into the
+                          same footprint, so narrow logos look just as big. */}
                       <img
                         src={partner.src}
                         alt={`${partner.name} partner`}
                         loading="lazy"
-                        className="block h-6 w-auto max-w-[150px] leading-none object-contain opacity-70 grayscale transition duration-300 hover:opacity-100 hover:grayscale-0 sm:h-7"
+                        className="h-full w-full object-contain p-2.5"
                       />
                     </li>
                   ))}
