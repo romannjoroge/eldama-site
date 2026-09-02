@@ -314,13 +314,6 @@ export function Hero() {
                         );
                       })}
                     </motion.ul>
-
-                    {/* Terminal footer */}
-                    <div className="mt-4 rounded-[6px] border border-white/10 bg-ink/70 px-3 py-2 font-mono text-[12px] text-primary-bright">
-                      <span className="text-white/40">$</span> eldama
-                      --stack-status: {services.length}/{services.length}{" "}
-                      services operational
-                    </div>
                   </div>
                 </Tilt>
 

@@ -9,7 +9,7 @@ import { services } from "~/data/site";
  */
 export function MarqueeBand() {
   return (
-    <section aria-hidden="true" className="overflow-hidden border-y border-hairline bg-cloud py-7">
+    <section aria-hidden="true" className="cv-section overflow-hidden border-y border-hairline bg-cloud py-7">
       <div className="-rotate-1 scale-[1.03]">
         <div className="marquee-group marquee-mask overflow-hidden">
           <div

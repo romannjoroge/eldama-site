@@ -1,5 +1,25 @@
 @import "tailwindcss";
 
+/* =====================================================================
+   Self-hosted variable fonts (latin). Local woff2 — no third-party hop,
+   no render-blocking stylesheet. `font-display: swap` keeps text visible.
+   ===================================================================== */
+@font-face {
+  font-family: "Manrope";
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+  src: url("/fonts/manrope-latin.woff2") format("woff2-variations");
+}
+
+@font-face {
+  font-family: "Space Grotesk";
+  font-style: normal;
+  font-weight: 500 700;
+  font-display: swap;
+  src: url("/fonts/spacegrotesk-latin.woff2") format("woff2-variations");
+}
+
 @theme {
   --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
@@ -229,29 +249,25 @@ html {
   inset: 0;
   z-index: 45;
   pointer-events: none;
-  opacity: 0.05;
+  opacity: 0.04;
   mix-blend-mode: overlay;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.7'/%3E%3C/svg%3E");
-  animation: grain-shift 9s steps(10) infinite;
 }
 
-@keyframes grain-shift {
-  0%,
-  100% {
-    background-position: 0 0;
+/* Coarse pointers (phones/tablets) skip the grain overlay entirely. */
+@media (pointer: coarse) {
+  .grain {
+    display: none;
   }
-  20% {
-    background-position: -30px 20px;
-  }
-  40% {
-    background-position: 20px -30px;
-  }
-  60% {
-    background-position: -20px -20px;
-  }
-  80% {
-    background-position: 30px 30px;
-  }
+}
+
+/* =====================================================================
+   content-visibility — let the browser skip rendering below-the-fold
+   sections until they approach the viewport (faster first paint/scroll).
+   ===================================================================== */
+.cv-section {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 1000px;
 }
 
 /* =====================================================================

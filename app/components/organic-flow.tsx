@@ -227,16 +227,47 @@ export function OrganicFlow({
         lastRipple = time;
       }
       draw();
-      raf = requestAnimationFrame(loop);
+      if (running) raf = requestAnimationFrame(loop);
     };
+
+    // Pause when off-screen or tab hidden — saves CPU when the diagram isn't visible.
+    let running = false;
+    let visible = true;
+    const syncRun = () => {
+      const shouldRun = visible && !document.hidden && !reduce;
+      if (shouldRun && !running) {
+        running = true;
+        raf = requestAnimationFrame(loop);
+      } else if (!shouldRun && running) {
+        running = false;
+        cancelAnimationFrame(raf);
+      }
+    };
+    const io = new IntersectionObserver(
+      (entries) => {
+        visible = entries[0]?.isIntersecting ?? true;
+        syncRun();
+      },
+      { threshold: 0.01 },
+    );
+    const onVis = () => syncRun();
 
     resize();
     window.addEventListener("resize", resize);
-    if (!reduce) raf = requestAnimationFrame(loop);
+    document.addEventListener("visibilitychange", onVis);
+    io.observe(canvas);
+    if (reduce) {
+      draw();
+    } else {
+      syncRun();
+    }
 
     return () => {
+      running = false;
       cancelAnimationFrame(raf);
       window.removeEventListener("resize", resize);
+      document.removeEventListener("visibilitychange", onVis);
+      io.disconnect();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

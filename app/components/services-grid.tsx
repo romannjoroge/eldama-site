@@ -5,7 +5,7 @@ import { services } from "~/data/site";
 
 export function ServicesGrid() {
   return (
-    <section id="services" className="section-pad scroll-mt-24 bg-cloud">
+    <section id="services" className="cv-section section-pad scroll-mt-24 bg-cloud">
       <div className="container-site">
         <SectionHeading
           eyebrow="What we do"

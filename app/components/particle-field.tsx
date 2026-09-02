@@ -426,34 +426,37 @@ export function ParticleField({
     };
 
     // ---- events (window-level so hero overlay divs can't block them) ----
-    const isInside = (clientX: number, clientY: number) => {
+    // Cached canvas rect — the canvas is only visible at the top of the page,
+    // so the rect is stable while it runs (updated on resize).
+    const rect = { left: 0, top: 0, right: 0, bottom: 0, width: 0, height: 0 };
+    const updateRect = () => {
       const r = canvas.getBoundingClientRect();
-      return (
-        clientX >= r.left &&
-        clientX <= r.right &&
-        clientY >= r.top &&
-        clientY <= r.bottom
-      );
+      rect.left = r.left;
+      rect.top = r.top;
+      rect.right = r.right;
+      rect.bottom = r.bottom;
+      rect.width = r.width;
+      rect.height = r.height;
     };
+    const isInside = (clientX: number, clientY: number) =>
+      clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom;
     const onMove = (e: PointerEvent) => {
-      const r = canvas.getBoundingClientRect();
       if (!isInside(e.clientX, e.clientY)) {
         mouse.x = -9999;
         mouse.y = -9999;
         isMouse.value = false;
         return;
       }
-      mouse.x = e.clientX - r.left;
-      mouse.y = e.clientY - r.top;
+      mouse.x = e.clientX - rect.left;
+      mouse.y = e.clientY - rect.top;
       isMouse.value = true;
     };
     const onDown = (e: PointerEvent) => {
       if (!isInside(e.clientX, e.clientY)) return;
-      const r = canvas.getBoundingClientRect();
-      addShock(e.clientX - r.left, e.clientY - r.top);
+      addShock(e.clientX - rect.left, e.clientY - rect.top);
     };
     const onResize = () => {
-      const rect = canvas.getBoundingClientRect();
+      updateRect();
       width = rect.width;
       height = rect.height;
       canvas.width = Math.max(1, Math.round(width * dpr));
@@ -461,6 +464,18 @@ export function ParticleField({
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       rebuild();
       if (reduce) draw();
+    };
+
+    // While the hero is partially on screen, scrolling moves the canvas —
+    // keep the cached rect in sync (rAF-throttled) so the cursor ring and
+    // shockwaves stay glued to the pointer.
+    let scrollRaf = 0;
+    const onScroll = () => {
+      if (scrollRaf) return;
+      scrollRaf = requestAnimationFrame(() => {
+        scrollRaf = 0;
+        updateRect();
+      });
     };
 
     // packet spawner tick handled inside draw via time check
@@ -491,6 +506,7 @@ export function ParticleField({
     const onVis = () => syncRun();
 
     window.addEventListener("resize", onResize);
+    window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerdown", onDown);
     document.addEventListener("visibilitychange", onVis);
@@ -506,7 +522,9 @@ export function ParticleField({
     return () => {
       running = false;
       cancelAnimationFrame(raf);
+      if (scrollRaf) cancelAnimationFrame(scrollRaf);
       window.removeEventListener("resize", onResize);
+      window.removeEventListener("scroll", onScroll);
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerdown", onDown);
       document.removeEventListener("visibilitychange", onVis);

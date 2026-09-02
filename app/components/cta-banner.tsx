@@ -21,7 +21,7 @@ export function CtaBanner({
   const { openQuote } = useQuote();
 
   return (
-    <section data-dark className="relative overflow-hidden bg-ink section-pad text-white">
+    <section data-dark className="cv-section relative overflow-hidden bg-ink section-pad text-white">
       {/* Aurora backdrop */}
       <div aria-hidden="true" className="absolute inset-0">
         <div className="animate-aurora-slow absolute -left-40 -top-40 h-[520px] w-[520px] rounded-full bg-primary/30 blur-[130px]" />

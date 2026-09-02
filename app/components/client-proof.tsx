@@ -9,7 +9,7 @@ import { clients, services } from "~/data/site";
 
 export function ClientProof() {
   return (
-    <section id="clients" className="section-pad scroll-mt-24 bg-cloud">
+    <section id="clients" className="cv-section section-pad scroll-mt-24 bg-cloud">
       <div className="container-site">
         <SectionHeading
           eyebrow="Client proof"

@@ -1,17 +1,17 @@
 import { motion } from "motion/react";
 
 import { Icon } from "~/components/icons";
+import { LazyOrbit } from "~/components/lazy-orbit";
 import { Stagger, StaggerItem, scaleItem } from "~/components/motion";
 import { useQuote } from "~/components/quote-modal";
 import { SectionHeading } from "~/components/section-heading";
-import { StackOrbit } from "~/components/stack-orbit";
 import { services } from "~/data/site";
 
 export function Coverage() {
   const { openQuote } = useQuote();
 
   return (
-    <section data-dark className="bg-ink section-pad text-white">
+    <section data-dark className="cv-section bg-ink section-pad text-white">
       <div className="container-site">
         <SectionHeading
           eyebrow="Complete IT coverage"
@@ -55,9 +55,9 @@ export function Coverage() {
             </motion.button>
           </div>
 
-          {/* Desktop: radial network diagram */}
+          {/* Desktop: radial network diagram (lazy, loads near viewport) */}
           <div className="hidden lg:block">
-            <StackOrbit />
+            <LazyOrbit />
           </div>
 
           {/* Mobile: compact grid fallback */}

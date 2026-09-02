@@ -8,7 +8,7 @@ import { stats, whyEldama } from "~/data/site";
 
 export function WhyEldama() {
   return (
-    <section id="why-eldama" className="section-pad scroll-mt-24 bg-white">
+    <section id="why-eldama" className="cv-section section-pad scroll-mt-24 bg-white">
       <div className="container-site">
         <SectionHeading
           eyebrow="Why Eldama"

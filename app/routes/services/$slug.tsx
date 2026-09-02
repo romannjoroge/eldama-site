@@ -115,7 +115,7 @@ export default function ServicePage({ loaderData }: Route.ComponentProps) {
       </section>
 
       {/* Body */}
-      <section className="bg-white py-16 sm:py-20">
+      <section className="cv-section bg-white py-16 sm:py-20">
         <div className="container-site grid gap-12 lg:grid-cols-[1fr_320px]">
           <div>
             <Reveal>
@@ -230,7 +230,7 @@ export default function ServicePage({ loaderData }: Route.ComponentProps) {
       </section>
 
       {/* Cross-sell */}
-      <section className="bg-cloud section-pad">
+      <section className="cv-section bg-cloud section-pad">
         <div className="container-site">
           <SectionHeading
             eyebrow="Complete IT coverage"

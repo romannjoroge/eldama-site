@@ -38,6 +38,7 @@ export function TrustBar() {
                         src={partner.src}
                         alt={`${partner.name} partner`}
                         loading="lazy"
+                        decoding="async"
                         className="h-full w-full object-contain p-2.5"
                       />
                     </li>
