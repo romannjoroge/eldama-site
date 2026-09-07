@@ -4,6 +4,7 @@ import { ClientProof } from "~/components/client-proof";
 import { Coverage } from "~/components/coverage";
 import { CtaBanner } from "~/components/cta-banner";
 import { Hero } from "~/components/hero";
+import { MarqueeBand } from "~/components/marquee-band";
 import { ServicesGrid } from "~/components/services-grid";
 import { TrustBar } from "~/components/trust-bar";
 import { WhyEldama } from "~/components/why-eldama";
@@ -24,6 +25,7 @@ export default function Home() {
     <>
       <Hero />
       <TrustBar />
+      <MarqueeBand />
       <ServicesGrid />
       <Coverage />
       <WhyEldama />

@@ -34,6 +34,12 @@ const paths: Record<ServiceIconName, React.ReactNode> = {
       <path d="m3.5 7 8.5 6 8.5-6" />
     </>
   ),
+  code: (
+    <>
+      <path d="m8.5 7.5-4.5 4.5 4.5 4.5M15.5 7.5 20 12l-4.5 4.5" />
+      <path d="m13 5.5-2 13" />
+    </>
+  ),
   quote: (
     <>
       <path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5c-1.2 0-2.4-.25-3.4-.7L3 21l1.7-4.1A8.5 8.5 0 1 1 21 11.5Z" />

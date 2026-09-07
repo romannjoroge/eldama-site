@@ -1,8 +1,32 @@
 @import "tailwindcss";
 
+/* =====================================================================
+   Self-hosted variable fonts (latin). Local woff2 — no third-party hop,
+   no render-blocking stylesheet. `font-display: swap` keeps text visible.
+   ===================================================================== */
+@font-face {
+  font-family: "Manrope";
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+  src: url("/fonts/manrope-latin.woff2") format("woff2-variations");
+}
+
+@font-face {
+  font-family: "Space Grotesk";
+  font-style: normal;
+  font-weight: 500 700;
+  font-display: swap;
+  src: url("/fonts/spacegrotesk-latin.woff2") format("woff2-variations");
+}
+
 @theme {
   --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+
+  /* Techy display face used for the big marquee band, preloader, and stat numerals */
+  --font-display: "Space Grotesk", "Manrope", ui-sans-serif, system-ui,
+    sans-serif;
 
   /* =====================================================================
      HP-inspired design tokens (see DESIGN-hp.md).
@@ -56,6 +80,202 @@ html {
   html {
     scroll-behavior: auto;
   }
+
+  .marquee-track,
+  .grain,
+  .animate-aurora-slow,
+  .animate-aurora-slower,
+  .animate-blob,
+  .animate-blob-slow {
+    animation: none;
+  }
+}
+
+html {
+  scroll-padding-top: 6rem;
+}
+
+/* =====================================================================
+   Marquee — infinite partner-badge ticker in the trust bar.
+   The track holds two identical copies so translating -50% loops seamlessly.
+   ===================================================================== */
+@keyframes eldama-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.marquee-mask {
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    black 10%,
+    black 90%,
+    transparent
+  );
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent,
+    black 10%,
+    black 90%,
+    transparent
+  );
+}
+
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: eldama-marquee var(--marquee-speed, 36s) linear infinite;
+  will-change: transform;
+}
+
+.marquee-group:hover .marquee-track,
+.marquee-group:focus-within .marquee-track {
+  animation-play-state: paused;
+}
+
+/* =====================================================================
+   Glass — neutral frosted pane for the floating nav. Content scrolls
+   behind and stays softly visible through the blur (true "glass", no tint).
+   ===================================================================== */
+@utility glass-nav {
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.5),
+    rgba(255, 255, 255, 0.24)
+  );
+  -webkit-backdrop-filter: blur(28px) saturate(170%);
+  backdrop-filter: blur(28px) saturate(170%);
+}
+
+/* =====================================================================
+   Aurora — drifting blurred colour blobs for dark section backdrops.
+   ===================================================================== */
+@keyframes aurora-move {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(40px, -50px) scale(1.15);
+  }
+  66% {
+    transform: translate(-30px, 40px) scale(0.9);
+  }
+}
+
+.animate-aurora-slow {
+  animation: aurora-move 14s ease-in-out infinite;
+  will-change: transform;
+}
+
+.animate-aurora-slower {
+  animation: aurora-move 22s ease-in-out infinite reverse;
+  will-change: transform;
+}
+
+/* =====================================================================
+   Faint blueprint grid for dark hero/CTA backdrops.
+   ===================================================================== */
+.bg-grid {
+  background-image: linear-gradient(
+      to right,
+      rgba(255, 255, 255, 0.06) 1px,
+      transparent 1px
+    ),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  background-size: 56px 56px;
+}
+
+/* =====================================================================
+   Organic blob morph — for the hub's soft breathing rings in the coverage
+   diagram. Blurs away the "perfect circle" tackiness.
+   ===================================================================== */
+@keyframes blob-morph {
+  0%,
+  100% {
+    border-radius: 42% 58% 55% 45% / 45% 48% 52% 55%;
+  }
+  33% {
+    border-radius: 55% 45% 42% 58% / 55% 45% 45% 55%;
+  }
+  66% {
+    border-radius: 48% 52% 58% 42% / 45% 55% 48% 52%;
+  }
+}
+
+.animate-blob {
+  animation: blob-morph 9s ease-in-out infinite;
+}
+
+.animate-blob-slow {
+  animation: blob-morph 14s ease-in-out infinite reverse;
+}
+
+/* =====================================================================
+   Custom thin scrollbar for the quote modal — a subtle blue thumb on a
+   transparent track instead of the chunky native scrollbar.
+   ===================================================================== */
+.scroll-modal {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(2, 74, 216, 0.45) transparent;
+}
+
+.scroll-modal::-webkit-scrollbar {
+  width: 5px;
+}
+
+.scroll-modal::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scroll-modal::-webkit-scrollbar-thumb {
+  background: rgba(2, 74, 216, 0.4);
+  border-radius: 9999px;
+}
+
+.scroll-modal::-webkit-scrollbar-thumb:hover {
+  background: rgba(2, 74, 216, 0.65);
+}
+
+/* =====================================================================
+   Grain overlay — adds texture so flat colour bands stop feeling sterile.
+   ===================================================================== */
+.grain {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  pointer-events: none;
+  opacity: 0.04;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.7'/%3E%3C/svg%3E");
+}
+
+/* Coarse pointers (phones/tablets) skip the grain overlay entirely. */
+@media (pointer: coarse) {
+  .grain {
+    display: none;
+  }
+}
+
+/* =====================================================================
+   content-visibility — let the browser skip rendering below-the-fold
+   sections until they approach the viewport (faster first paint/scroll).
+   ===================================================================== */
+.cv-section {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 1000px;
+}
+
+/* =====================================================================
+   Outlined display text for the big marquee band.
+   ===================================================================== */
+.text-stroke-ink {
+  -webkit-text-stroke: 1.5px var(--color-ink);
+  color: transparent;
 }
 
 @layer components {
@@ -104,11 +324,11 @@ html {
   }
 
   .h-display {
-    @apply text-[clamp(2.35rem,5.2vw,4.5rem)] font-medium leading-[1.02] tracking-normal text-ink;
+    @apply text-[clamp(2.6rem,6vw,5rem)] font-semibold leading-[1.02] tracking-[-0.02em] text-ink;
   }
 
   .h-section {
-    @apply text-[clamp(1.85rem,3.4vw,2.75rem)] font-medium leading-[1.05] tracking-normal text-ink;
+    @apply text-[clamp(1.9rem,3.6vw,2.9rem)] font-semibold leading-[1.05] tracking-[-0.01em] text-ink;
   }
 
   .h-card {

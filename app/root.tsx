@@ -1,3 +1,4 @@
+import { MotionConfig } from "motion/react";
 import {
   isRouteErrorResponse,
   Links,
@@ -11,21 +12,11 @@ import type { Route } from "./+types/root";
 import { Footer } from "./components/footer";
 import { Header } from "./components/header";
 import { Icon } from "./components/icons";
+import { IntroProvider } from "./components/intro";
 import { QuoteProvider, useQuote } from "./components/quote-modal";
+import { ScrollProgress } from "./components/scroll-progress";
+import { SmoothScroll } from "./components/smooth-scroll";
 import "./app.css";
-
-export const links: Route.LinksFunction = () => [
-  { rel: "preconnect", href: "https://fonts.googleapis.com" },
-  {
-    rel: "preconnect",
-    href: "https://fonts.gstatic.com",
-    crossOrigin: "anonymous",
-  },
-  {
-    rel: "stylesheet",
-    href: "https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap",
-  },
-];
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -33,6 +24,20 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link
+          rel="preload"
+          href="/fonts/manrope-latin.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+        />
+        <link
+          rel="preload"
+          href="/fonts/spacegrotesk-latin.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+        />
         <Meta />
         <Links />
       </head>
@@ -47,16 +52,24 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   return (
-    <QuoteProvider>
-      <div className="flex min-h-screen flex-col">
-        <Header />
-        <main className="flex-1">
-          <Outlet />
-        </main>
-        <Footer />
-        <MobileQuoteBar />
-      </div>
-    </QuoteProvider>
+    <MotionConfig reducedMotion="user">
+      <SmoothScroll>
+        <QuoteProvider>
+          <IntroProvider>
+            <div className="flex min-h-screen flex-col">
+              <ScrollProgress />
+              <Header />
+              <main className="flex-1">
+                <Outlet />
+              </main>
+              <Footer />
+              <MobileQuoteBar />
+            </div>
+            <div className="grain" aria-hidden="true" />
+          </IntroProvider>
+        </QuoteProvider>
+      </SmoothScroll>
+    </MotionConfig>
   );
 }
 
@@ -98,10 +111,10 @@ function MobileQuoteBar() {
       <button
         type="button"
         onClick={() => openQuote()}
-        className="btn-primary w-full"
+        className="btn-primary w-full !h-10 !text-[13px]"
       >
         Get a Quote
-        <Icon name="arrow" className="h-4 w-4" />
+        <Icon name="arrow" className="h-3.5 w-3.5" />
       </button>
     </div>
   );
