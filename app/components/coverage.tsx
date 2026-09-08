@@ -16,7 +16,7 @@ export function Coverage() {
         <SectionHeading
           eyebrow="Complete IT coverage"
           title="Most clients start with one service — and expand."
-          description="Six service areas work together as one IT stack. A Microsoft 365 rollout naturally leads to endpoint protection; a new firewall leads to backup and disaster recovery; a cloud migration leads to DevOps. Start where the pain is, and let one accountable partner close the gaps."
+          description="All of our service areas work together as one IT stack. An IT outsourcing relationship naturally leads to cloud and backup; a cloud migration leads to DevOps; and every one of them needs cybersecurity layered in. Start where the pain is, and let one accountable partner close the gaps."
           align="center"
           dark
         />
