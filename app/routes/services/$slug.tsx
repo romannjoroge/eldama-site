@@ -1,5 +1,5 @@
 import { motion } from "motion/react";
-import { Link } from "react-router";
+import { Link, redirect } from "react-router";
 import type { Route } from "./+types/$slug";
 
 import { CtaBanner } from "~/components/cta-banner";
@@ -13,9 +13,17 @@ import {
 import { useQuote } from "~/components/quote-modal";
 import { RevealHeading, SectionHeading } from "~/components/section-heading";
 import { SpotlightOverlay, useSpotlight } from "~/components/spotlight";
-import { formatResponseTime, getService, services } from "~/data/site";
+import {
+  formatResponseTime,
+  getService,
+  legacyServiceSlugs,
+  services,
+} from "~/data/site";
 
 export function loader({ params }: Route.LoaderArgs) {
+  // Old Endpoint/Email pages now live under the Cybersecurity umbrella.
+  const legacy = params.slug ? legacyServiceSlugs[params.slug] : undefined;
+  if (legacy) return redirect(`/services/${legacy}`);
   const service = getService(params.slug);
   if (!service) {
     throw new Response("Service not found", { status: 404 });

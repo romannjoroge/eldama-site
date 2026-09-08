@@ -10,7 +10,7 @@ export function ServicesGrid() {
         <SectionHeading
           eyebrow="What we do"
           title="Find the service your business needs"
-          description="Six core service areas, one certified partner. Start with a single category — most clients add more as they grow."
+          description="Every service your IT needs under one certified partner. Start with a single category — most clients add more as they grow."
         />
 
         <Stagger

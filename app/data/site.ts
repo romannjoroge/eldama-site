@@ -7,12 +7,17 @@
  */
 
 export type ServiceSlug =
-  | "microsoft-365"
   | "it-outsourcing"
-  | "endpoint-security"
   | "cloud-services"
-  | "email-security"
-  | "software-development";
+  | "cybersecurity"
+  | "software-development"
+  | "microsoft-365";
+
+/** Old service pages that now live under the Cybersecurity umbrella. */
+export const legacyServiceSlugs: Record<string, ServiceSlug> = {
+  "endpoint-security": "cybersecurity",
+  "email-security": "cybersecurity",
+};
 
 export interface Tool {
   name: string;
@@ -72,60 +77,6 @@ export const company = {
 
 export const services: Service[] = [
   {
-    slug: "microsoft-365",
-    name: "Microsoft 365",
-    shortName: "Microsoft 365",
-    tagline: "Email, Teams, SharePoint, and device management — planned, deployed, and supported.",
-    description:
-      "Eldama is a Microsoft Gold Partner for Microsoft 365. We plan, deploy, migrate, and support the full Microsoft 365 stack so your team works from anywhere with secure, always-available productivity tools.",
-    intro:
-      "As Kenya's first Tier 1 Microsoft Cloud Solutions Provider, Eldama helps organisations transition from on-premise infrastructure to secure, scalable cloud productivity platforms. From a first-time migration off legacy mail to a fully managed Microsoft 365 estate, we handle licensing, setup, security configuration, and day-to-day support as one accountable partner.",
-    icon: "m365",
-    badge: "Microsoft Gold Partner",
-    badges: [
-      "Microsoft Gold Partner",
-      "Tier 1 Microsoft Cloud Solutions Provider",
-      "Microsoft Certified",
-    ],
-    tools: [
-      {
-        name: "Microsoft 365 Business",
-        description:
-          "Right-sized plans and licensing for email, Office apps, and cloud file storage — configured to your headcount and compliance needs.",
-      },
-      {
-        name: "Exchange Online & Outlook",
-        description:
-          "Professional email with calendar, archiving, anti-spam, and mobile sync, including migrations from on-premises or legacy providers.",
-      },
-      {
-        name: "Microsoft Teams & SharePoint",
-        description:
-          "Team chat, meetings, and shared document workspaces set up with the right governance so information stays organised and secure.",
-      },
-      {
-        name: "Entra ID & Intune",
-        description:
-          "Identity and device management — single sign-on, multi-factor authentication, and conditional access policies that protect every login.",
-      },
-      {
-        name: "SharePoint Intranets",
-        description:
-          "Centralised document storage, workflows and collaboration.",
-      },
-      {
-        name: "Hosted Communications",
-        description:
-          "Email, VoIP, video conferencing and messaging.",
-      },
-    ],
-    clientProof: [
-      { client: "Mace Group", line: "Microsoft 365 rollout and managed support" },
-      { client: "Nairobi Hospital", line: "Cloud & Endpoint Security built on Microsoft 365" },
-    ],
-    crossSell: ["endpoint-security", "email-security", "cloud-services"],
-  },
-  {
     slug: "it-outsourcing",
     name: "IT Outsourcing",
     shortName: "IT Outsourcing",
@@ -178,57 +129,7 @@ export const services: Service[] = [
       { client: "Mace Group", line: "Full IT outsourcing and helpdesk" },
       { client: "Galleria Mall", line: "Network infrastructure and firewall management" },
     ],
-    crossSell: ["microsoft-365", "endpoint-security", "cloud-services"],
-  },
-  {
-    slug: "endpoint-security",
-    name: "Endpoint Security",
-    shortName: "Endpoint Security",
-    tagline: "Every device protected — from antivirus to managed detection & response.",
-    description:
-      "Modern threats bypass basic antivirus. Eldama layers best-in-class endpoint protection — Webroot, Cynet, Usecure, KnowBe4, and Keeper — with the monitoring and response capability to stop attacks before they spread.",
-    intro:
-      "We secure every laptop, desktop, and server your team uses, and back it with managed detection and response (MDR) so a specialist is watching when an alert fires.",
-    icon: "shield",
-    badge: "Webroot, Cynet & Sophos Partner",
-    badges: ["Webroot Partner", "Cynet Partner", "Sophos Partner"],
-    tools: [
-      {
-        name: "Cyber Threat Assessments (CTAP)",
-        description:
-          "Basic and Advanced security audits identifying vulnerabilities.",
-      },
-      {
-        name: "Webroot",
-        description:
-          "Lightweight, cloud-based antivirus and threat intelligence that protects endpoints without slowing machines down.",
-      },
-      {
-        name: "Cynet MDR",
-        description:
-          "Managed detection and response — continuous monitoring, automated containment, and 24/7 security analysts on your environment.",
-      },
-      {
-        name: "Usecure",
-        description:
-          "Security awareness training that turns staff from the weakest link into a working layer of defence.",
-      },
-      {
-        name: "KnowBe4",
-        description:
-          "Phishing simulation and security awareness programs that measurably reduce the risk of social engineering.",
-      },
-      {
-        name: "Keeper Password Manager",
-        description:
-          "Enterprise password management and secure vaulting so credentials are strong, unique, and never shared in plain text.",
-      },
-    ],
-    clientProof: [
-      { client: "Nairobi Hospital", line: "Endpoint protection and MDR" },
-      { client: "Galleria Mall", line: "Endpoint security across sites" },
-    ],
-    crossSell: ["email-security", "microsoft-365", "cloud-services"],
+    crossSell: ["cloud-services", "cybersecurity", "microsoft-365"],
   },
   {
     slug: "cloud-services",
@@ -236,7 +137,7 @@ export const services: Service[] = [
     shortName: "Cloud Services",
     tagline: "Azure infrastructure and backup you can actually rely on.",
     description:
-      "Move to the cloud with a certified partner. Eldama designs, migrates, and manages Azure infrastructure — and protects it with Datto and Cove backup so downtime and data loss are engineered out.",
+      "Move to the cloud with a certified partner. Eldama designs, migrates, and manages Azure infrastructure — and protects it with Datto, Cove, and Acronis backup so downtime and data loss are engineered out.",
     intro:
       "Whether you are consolidating servers, enabling hybrid work, or just need reliable backup, we right-size the cloud for your business and manage it day-to-day.",
     icon: "cloud",
@@ -283,52 +184,77 @@ export const services: Service[] = [
       { client: "Nairobi Hospital", line: "Cloud & Endpoint Security" },
       { client: "Mace Group", line: "Azure infrastructure and cloud backup" },
     ],
-    crossSell: ["it-outsourcing", "endpoint-security", "microsoft-365"],
+    crossSell: ["cybersecurity", "it-outsourcing", "software-development"],
   },
   {
-    slug: "email-security",
-    name: "Email Security",
-    shortName: "Email Security",
-    tagline: "Advanced threat protection for your most attacked channel.",
+    slug: "cybersecurity",
+    name: "Cybersecurity",
+    shortName: "Cybersecurity",
+    tagline: "Endpoints, email, identities, and people — defended as one surface.",
     description:
-      "Email is where most attacks begin. Eldama deploys Check Point Harmony Email & Collaboration to block phishing, ransomware, and business email compromise before they reach your inbox.",
+      "Modern attacks don't respect categories — they move from an inbox to a device to a password. Eldama secures the whole attack surface under one umbrella: every endpoint, every mailbox, and every user, layered with best-in-class tools — Webroot, Cynet MDR, KnowBe4, Usecure, Keeper, Check Point Harmony, and Mimecast.",
     intro:
-      "We layer advanced email protection on top of your mail platform — filtering malicious links and attachments, stopping impersonation, and giving you visibility into every threat.",
-    icon: "mail",
-    badge: "Check Point Partner",
-    badges: ["Check Point Partner"],
+      "We bring endpoint protection and email security together as a single managed service, so nothing falls between the cracks. Devices are guarded and watched around the clock with managed detection and response (MDR); email is filtered for phishing, malware, and business-email compromise before it reaches your inbox; and your people are trained to spot the attacks that slip through. One layer reinforces the next — and one team is accountable for all of it.",
+    icon: "shield",
+    badge: "Webroot · Cynet · Check Point",
+    badges: [
+      "Webroot Partner",
+      "Cynet Partner",
+      "Check Point & Mimecast Partner",
+    ],
     tools: [
       {
-        name: "Check Point Harmony Email & Collaboration",
+        name: "Endpoint protection: Webroot",
         description:
-          "AI-driven protection for email and collaboration apps that blocks phishing, malware, and account takeover attempts in real time.",
+          "Lightweight, cloud-based antivirus and threat intelligence that protects every endpoint without slowing machines down.",
       },
       {
-        name: "Mimecast",
+        name: "Managed detection & response: Cynet MDR",
         description:
-          "Cloud-based email security that filters malicious attachments, links, and impersonation attempts before they reach your inbox.",
+          "Continuous monitoring, automated containment, and 24/7 security analysts on your environment — so an alert becomes a stopped attack.",
       },
       {
-        name: "Anti-phishing & impersonation defence",
+        name: "Phishing awareness: KnowBe4",
         description:
-          "Protection against lookalike domains, CEO fraud, and social engineering aimed at your staff.",
+          "Phishing simulation and security awareness programs that measurably reduce the risk of social engineering.",
       },
       {
-        name: "Attachment & link sandboxing",
+        name: "Security awareness: Usecure",
         description:
-          "Suspicious attachments and URLs are detonated in a safe environment before anything reaches a user.",
+          "Ongoing staff training that turns people from the weakest link into a working layer of defence.",
+      },
+      {
+        name: "Password security: Keeper",
+        description:
+          "Enterprise password management and secure vaulting so credentials stay strong, unique, and never shared in plain text.",
+      },
+      {
+        name: "Email security: Check Point Harmony",
+        description:
+          "AI-driven protection for email and collaboration that blocks phishing, malware, and account-takeover attempts in real time.",
+      },
+      {
+        name: "Email security: Mimecast",
+        description:
+          "Cloud-based email filtering for malicious attachments, links, and impersonation before anything reaches an inbox.",
+      },
+      {
+        name: "Threat assessments (CTAP)",
+        description:
+          "Basic and advanced security audits that identify and prioritise the vulnerabilities in your environment.",
       },
       {
         name: "Incident response & tuning",
         description:
-          "Our team monitors the threat feed, investigates alerts, and tunes policy so protection stays effective without blocking business mail.",
+          "Our team investigates alerts, contains incidents, and tunes policy so protection stays effective without blocking real work.",
       },
     ],
     clientProof: [
-      { client: "Nairobi Hospital", line: "Email security and threat monitoring" },
+      { client: "Nairobi Hospital", line: "Endpoint protection, MDR & email security" },
+      { client: "Galleria Mall", line: "Endpoint security across sites" },
       { client: "Mace Group", line: "Advanced email protection" },
     ],
-    crossSell: ["endpoint-security", "microsoft-365", "it-outsourcing"],
+    crossSell: ["microsoft-365", "cloud-services", "it-outsourcing"],
   },
   {
     slug: "software-development",
@@ -375,7 +301,61 @@ export const services: Service[] = [
       },
     ],
     clientProof: [],
-    crossSell: ["cloud-services", "microsoft-365", "it-outsourcing"],
+    crossSell: ["cloud-services", "microsoft-365", "cybersecurity"],
+  },
+  {
+    slug: "microsoft-365",
+    name: "Microsoft 365",
+    shortName: "Microsoft 365",
+    tagline: "Email, Teams, SharePoint, and device management — planned, deployed, and supported.",
+    description:
+      "Eldama is a Microsoft Gold Partner for Microsoft 365. We plan, deploy, migrate, and support the full Microsoft 365 stack so your team works from anywhere with secure, always-available productivity tools.",
+    intro:
+      "As Kenya's first Tier 1 Microsoft Cloud Solutions Provider, Eldama helps organisations transition from on-premise infrastructure to secure, scalable cloud productivity platforms. From a first-time migration off legacy mail to a fully managed Microsoft 365 estate, we handle licensing, setup, security configuration, and day-to-day support as one accountable partner.",
+    icon: "m365",
+    badge: "Microsoft Gold Partner",
+    badges: [
+      "Microsoft Gold Partner",
+      "Tier 1 Microsoft Cloud Solutions Provider",
+      "Microsoft Certified",
+    ],
+    tools: [
+      {
+        name: "Microsoft 365 Business",
+        description:
+          "Right-sized plans and licensing for email, Office apps, and cloud file storage — configured to your headcount and compliance needs.",
+      },
+      {
+        name: "Exchange Online & Outlook",
+        description:
+          "Professional email with calendar, archiving, anti-spam, and mobile sync, including migrations from on-premises or legacy providers.",
+      },
+      {
+        name: "Microsoft Teams & SharePoint",
+        description:
+          "Team chat, meetings, and shared document workspaces set up with the right governance so information stays organised and secure.",
+      },
+      {
+        name: "Entra ID & Intune",
+        description:
+          "Identity and device management — single sign-on, multi-factor authentication, and conditional access policies that protect every login.",
+      },
+      {
+        name: "SharePoint Intranets",
+        description:
+          "Centralised document storage, workflows and collaboration.",
+      },
+      {
+        name: "Hosted Communications",
+        description:
+          "Email, VoIP, video conferencing and messaging.",
+      },
+    ],
+    clientProof: [
+      { client: "Mace Group", line: "Microsoft 365 rollout and managed support" },
+      { client: "Nairobi Hospital", line: "Cloud & Endpoint Security built on Microsoft 365" },
+    ],
+    crossSell: ["cloud-services", "cybersecurity", "software-development"],
   },
 ];
 

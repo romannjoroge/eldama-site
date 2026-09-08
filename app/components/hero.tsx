@@ -121,7 +121,7 @@ export function Hero() {
               Certified across every service we offer
             </motion.p>
             <motion.p variants={fadeUpItem} className="eyebrow-light">
-              One partner. Six disciplines.
+              One partner. The whole stack.
             </motion.p>
           </div>
 
