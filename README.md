@@ -1,87 +1,103 @@
-# Welcome to React Router!
+# Eldama Website
 
-A modern, production-ready template for building full-stack React applications using React Router.
+Marketing and lead-generation site for **Eldama Technologies** — an all-in-one outsourced IT department for growing businesses. The site's primary goal is to convert procurement-minded visitors into **quote requests**, while cross-selling adjacent service categories.
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router-templates/tree/main/default)
+Built with [React Router](https://reactrouter.com/) (v8) in framework mode with server-side rendering, React 19, Tailwind CSS v4, and Motion.
 
-## Features
+## Tech Stack
 
-- 🚀 Server-side rendering
-- ⚡️ Hot Module Replacement (HMR)
-- 📦 Asset bundling and optimization
-- 🔄 Data loading and mutations
-- 🔒 TypeScript by default
-- 🎉 TailwindCSS for styling
-- 📖 [React Router docs](https://reactrouter.com/)
+| Layer      | Choice                                              |
+| ---------- | --------------------------------------------------- |
+| Framework  | React Router v8 (SSR)                               |
+| UI         | React 19                                            |
+| Styling    | Tailwind CSS v4 (`@theme` tokens in `app/app.css`)  |
+| Animation  | Motion, Lenis (smooth scroll)                       |
+| Language   | TypeScript                                          |
+| Build      | Vite 8                                              |
+| Runtime    | Node 24 (`react-router-serve`)                      |
 
 ## Getting Started
 
-### Installation
-
-Install the dependencies:
-
 ```bash
 npm install
-```
-
-### Development
-
-Start the development server with HMR:
-
-```bash
 npm run dev
 ```
 
-Your application will be available at `http://localhost:5173`.
+The dev server runs at `http://localhost:5173` with HMR.
 
-## Building for Production
+## Scripts
 
-Create a production build:
+| Command            | Description                                      |
+| ------------------ | ------------------------------------------------ |
+| `npm run dev`      | Start the dev server with HMR                    |
+| `npm run build`    | Production build into `build/`                   |
+| `npm run start`    | Serve the production build                      |
+| `npm run typecheck`| Generate route types and run `tsc`               |
 
-```bash
-npm run build
+## Project Structure
+
 ```
+app/
+  app.css                 Tailwind import + @theme design tokens
+  root.tsx                Layout, header/footer, quote modal & providers
+  routes.ts               Route manifest
+  routes/
+    home.tsx              Home page (hero, services grid, cross-sell, CTA)
+    quote.tsx             Dedicated /quote page
+    services/$slug.tsx    Dynamic service category pages
+    catchall.tsx          404 handling
+  data/site.ts            All site content & config (services, clients, stats, company)
+  components/             Reusable sections and UI (header, footer, quote form, etc.)
+  assets/                 Logo and partner badge images
+public/
+  fonts/                  Self-hosted Manrope & Space Grotesk
+```
+
+### Routes
+
+- `/` — Home
+- `/services/:slug` — One page per service category (`it-outsourcing`, `cloud-services`, `cybersecurity`, `software-development`, `microsoft-365`)
+- `/quote` — Quote request form
+- `*` — 404
+
+Legacy slugs `endpoint-security` and `email-security` redirect to `cybersecurity` (see `legacyServiceSlugs` in `app/data/site.ts`).
+
+## Editing Content
+
+Almost all copy, services, tools, client proof, partner badges, stats, and contact details live in **`app/data/site.ts`**. Update that file rather than editing components for content changes.
+
+## Theming
+
+Brand colors, fonts, and surface tokens are defined once in the `@theme` block of `app/app.css`. Components reference them through token-based utility classes (e.g. `bg-primary`, `text-ink`), so swapping the palette or fonts is a matter of editing that block. Placeholder assets live in `app/assets/` and `public/`.
 
 ## Deployment
 
-### Docker Deployment
-
-To build and run using Docker:
+### Docker
 
 ```bash
-docker build -t my-app .
-
-# Run the container
-docker run -p 3000:3000 my-app
+docker build -t eldama-site .
+docker run -p 3000:3000 eldama-site
 ```
 
-The containerized application can be deployed to any platform that supports Docker, including:
+The image builds the app and serves it with `react-router-serve`. It can be deployed to any Docker host (AWS ECS, Google Cloud Run, Azure Container Apps, Fly.io, Railway, etc.).
 
-- AWS ECS
-- Google Cloud Run
-- Azure Container Apps
-- Digital Ocean App Platform
-- Fly.io
-- Railway
+### Manual
 
-### DIY Deployment
+```bash
+npm run build
+npm run start
+```
 
-If you're familiar with deploying Node applications, the built-in app server is production-ready.
-
-Make sure to deploy the output of `npm run build`
+Deploy the output of `npm run build`:
 
 ```
 ├── package.json
-├── package-lock.json (or pnpm-lock.yaml, or bun.lockb)
-├── build/
-│   ├── client/    # Static assets
-│   └── server/    # Server-side code
+├── package-lock.json
+└── build/
+    ├── client/    # Static assets
+    └── server/    # Server-side code
 ```
 
-## Styling
+## Conventions
 
-This template comes with [Tailwind CSS](https://tailwindcss.com/) already configured for a simple default starting experience. You can use whatever CSS framework you prefer.
-
----
-
-Built with ❤️ using React Router.
+See [`AGENTS.md`](./AGENTS.md) for project goals, page structure, and content/tone guidelines, and [`DESIGN-hp.md`](./DESIGN-hp.md) for the visual design system.
