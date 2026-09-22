@@ -11,6 +11,7 @@ import {
   getService,
   partnerBadges,
 } from "~/data/site";
+import { recordAnalyticsEvent, recordQuoteSubmission } from "~/.server/admin-store";
 
 export function loader({ request }: Route.LoaderArgs) {
   const url = new URL(request.url);
@@ -36,11 +37,23 @@ export async function action({ request }: Route.ActionArgs) {
     } satisfies QuoteFormResult;
   }
 
-  // TODO: connect real lead capture here (CRM or email service webhook).
-  // The submitted payload is available in `formData` (name, company, email,
-  // phone, services, need).
-  const reference = `ELD-${Date.now().toString(36).toUpperCase()}`;
-  return { ok: true, submittedAt: reference } satisfies QuoteFormResult;
+  const submission = await recordQuoteSubmission({
+    name,
+    company: String(formData.get("company") ?? "").trim(),
+    email,
+    phone: String(formData.get("phone") ?? "").trim(),
+    services: selected,
+    need: String(formData.get("need") ?? "").trim(),
+  });
+
+  await recordAnalyticsEvent({
+    type: "quote_submit",
+    sessionId: request.headers.get("X-Eldama-Session") || "server-submit",
+    path: "/quote",
+    target: selected.join(", "),
+  });
+
+  return { ok: true, submittedAt: submission.id } satisfies QuoteFormResult;
 }
 
 export function meta({}: Route.MetaArgs) {

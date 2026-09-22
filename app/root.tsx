@@ -6,13 +6,16 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useLocation,
 } from "react-router";
 
 import type { Route } from "./+types/root";
+import { AnalyticsTracker } from "./components/analytics-tracker";
 import { Footer } from "./components/footer";
 import { Header } from "./components/header";
 import { Icon } from "./components/icons";
 import { IntroProvider } from "./components/intro";
+import { LiveChatWidget } from "./components/live-chat-widget";
 import { QuoteProvider, useQuote } from "./components/quote-modal";
 import { ScrollProgress } from "./components/scroll-progress";
 import { SmoothScroll } from "./components/smooth-scroll";
@@ -51,11 +54,25 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
+  const location = useLocation();
+  const isAdmin = location.pathname.startsWith("/admin");
+
+  if (isAdmin) {
+    return (
+      <MotionConfig reducedMotion="user">
+        <main className="min-h-screen bg-[#e9edf4]">
+          <Outlet />
+        </main>
+      </MotionConfig>
+    );
+  }
+
   return (
     <MotionConfig reducedMotion="user">
       <SmoothScroll>
         <QuoteProvider>
           <IntroProvider>
+            <AnalyticsTracker />
             <div className="flex min-h-screen flex-col">
               <ScrollProgress />
               <Header />
@@ -64,6 +81,7 @@ export default function App() {
               </main>
               <Footer />
               <MobileQuoteBar />
+              <LiveChatWidget />
             </div>
             <div className="grain" aria-hidden="true" />
           </IntroProvider>

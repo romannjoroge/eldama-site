@@ -51,6 +51,7 @@ The dev server runs at `http://localhost:5173` with hot module replacement.
 | --- | --- |
 | `npm run dev` | Start the local development server |
 | `npm run build` | Create a production build in `build/` |
+| `npm run realtime` | Start the Bun WebSocket server for live chat |
 | `npm run start` | Serve the production build |
 | `npm run typecheck` | Generate React Router route types and run `tsc` |
 
@@ -62,6 +63,8 @@ app/
   root.tsx                App shell, layout, header, footer, quote modal
   routes.ts               Route manifest
   routes/
+    admin.tsx             Admin login, metrics dashboard, chat console
+    api.track.tsx         Analytics ingestion endpoint
     home.tsx              Home page
     quote.tsx             Dedicated quote request page
     services/$slug.tsx    Dynamic service detail pages
@@ -74,11 +77,15 @@ public/
 build/
   client/                 Static production assets
   server/                 Server-side production bundle
+realtime/
+  server.js               Bun WebSocket server for live chat
 ```
 
 ## Routes
 
 - `/` - Home page
+- `/admin` - Admin login and dashboard
+- `/api/track` - Analytics event ingestion endpoint
 - `/services/:slug` - Service detail pages
 - `/quote` - Quote request form
 - `*` - 404 route
@@ -156,6 +163,47 @@ Fields:
 - Brief description of need
 
 Quote CTAs can preselect one or more services before opening the form.
+
+## Admin Panel
+
+The admin panel lives at `/admin`.
+
+Default development credentials:
+
+- Username: `admin`
+- Password: `1234`
+
+Override them in `.env`:
+
+```bash
+ADMIN_USER=admin
+ADMIN_PASSWORD=1234
+ADMIN_SESSION_SECRET=change-me-before-production
+VITE_CHAT_WS_URL=ws://localhost:8787/ws/chat
+```
+
+The dashboard includes:
+
+- Visits, sessions, quote clicks, submitted responses, live chat rooms, and average scroll depth
+- Per-session scroll-depth bars with quote-click and response markers
+- GA4-style path exploration showing page-to-page movement and conversion steps
+- Page access and click monitoring
+- Quote response cards
+- Live chat operator console
+
+Analytics and quote/chat data are stored locally in `.eldama-admin/store.json`. That directory is ignored by Git.
+
+## Live Chat
+
+Visitor chat appears sitewide as a floating widget. Admin replies are managed from `/admin`.
+
+Run the websocket server with Bun:
+
+```bash
+npm run realtime
+```
+
+By default it listens on `ws://localhost:8787/ws/chat`. Set `REALTIME_PORT` or `VITE_CHAT_WS_URL` if the port or host changes.
 
 ## Design Direction
 
