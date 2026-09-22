@@ -80,7 +80,7 @@ export function LiveChatWidget() {
 
   const send = () => {
     const trimmed = text.trim();
-    if (!trimmed || socketRef.current?.readyState !== WebSocket.OPEN) return;
+    if (!trimmed) return;
     const message: ChatMessage = {
       id: crypto.randomUUID(),
       roomId: visitorId,

@@ -524,18 +524,38 @@ function AdminChat({ initialMessages }: { initialMessages: ChatMessage[] }) {
 
   useEffect(() => {
     const base = import.meta.env.VITE_CHAT_WS_URL || "ws://localhost:8787/ws/chat";
-    const socket = new WebSocket(`${base}?role=admin&room=admin-console`);
-    socketRef.current = socket;
-    socket.addEventListener("open", () => setConnected(true));
-    socket.addEventListener("close", () => setConnected(false));
-    socket.addEventListener("message", (event) => {
-      const payload = JSON.parse(event.data) as { type: string; message?: ChatMessage };
-      if (payload.type === "message" && payload.message) {
-        setMessages((current) => appendUniqueMessages(current, payload.message!));
-        setRoomId((current) => current || payload.message!.roomId);
-      }
-    });
-    return () => socket.close();
+    let reconnectTimer: number | undefined;
+    let closedByCleanup = false;
+    let attempt = 0;
+    const connect = () => {
+      const socket = new WebSocket(`${base}?role=admin&room=admin-console`);
+      socketRef.current = socket;
+      socket.addEventListener("open", () => {
+        attempt = 0;
+        setConnected(true);
+      });
+      socket.addEventListener("close", () => {
+        setConnected(false);
+        if (!closedByCleanup) {
+          const backoff = Math.min(1000 * Math.pow(2, attempt), 15000);
+          attempt += 1;
+          reconnectTimer = window.setTimeout(connect, backoff);
+        }
+      });
+      socket.addEventListener("message", (event) => {
+        const payload = JSON.parse(event.data) as { type: string; message?: ChatMessage };
+        if (payload.type === "message" && payload.message) {
+          setMessages((current) => appendUniqueMessages(current, payload.message!));
+          setRoomId((current) => current || payload.message!.roomId);
+        }
+      });
+    };
+    connect();
+    return () => {
+      closedByCleanup = true;
+      if (reconnectTimer) window.clearTimeout(reconnectTimer);
+      socketRef.current?.close();
+    };
   }, []);
 
   const send = () => {
