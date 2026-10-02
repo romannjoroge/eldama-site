@@ -68,6 +68,7 @@ export function LiveChatWidget() {
   const [text, setText] = useState("");
   const [rateLimited, setRateLimited] = useState(false);
   const socketRef = useRef<WebSocket | null>(null);
+  const socketSessionRef = useRef<string | null>(null);
   const pendingRef = useRef<string[]>([]);
   const pageUrl = useMemo(() => (typeof window === "undefined" ? "" : window.location.href), []);
   const userAgent = useMemo(() => (typeof window === "undefined" ? "" : window.navigator.userAgent), []);
@@ -105,7 +106,6 @@ export function LiveChatWidget() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (!sessionId) return;
 
     const base = WS_DEFAULT;
     let reconnectTimer: number | undefined;
@@ -122,13 +122,17 @@ export function LiveChatWidget() {
       }
     };
 
-    void loadHistory(sessionId);
+    if (sessionId) void loadHistory(sessionId);
 
     const connect = () => {
-      const socket = new WebSocket(`${base}/ws/chat/${sessionId}`);
+      const socketPath = sessionId
+        ? `/ws/chat/${encodeURIComponent(sessionId)}`
+        : "/ws/presence";
+      const socket = new WebSocket(`${base}${socketPath}`);
       socketRef.current = socket;
+      socketSessionRef.current = sessionId;
 
-      socket.addEventListener("open", () => {
+      socket.addEventListener("open", (event) => {
         attempt = 0;
         setStatus("ready");
         const pending = pendingRef.current.splice(0);
@@ -149,13 +153,15 @@ export function LiveChatWidget() {
           type: string;
           message?: MessagePayload;
           sessionId?: string;
-          agentsOnline?: boolean;
+          agentsOnline?: number | boolean;
         };
         if (payload.type === "message" && payload.message) {
           setMessages((current) => appendUnique(current, payload.message!));
         } else if (payload.type === "session" && payload.sessionId) {
           writeJson(SESSION_KEY, { id: payload.sessionId });
           setSessionId(payload.sessionId);
+        } else if (payload.type === "presence" && typeof payload.agentsOnline === "number") {
+          setAgentsOnline(payload.agentsOnline > 0);
         } else if (payload.type === "presence" && typeof payload.agentsOnline === "boolean") {
           setAgentsOnline(payload.agentsOnline);
         }
@@ -206,7 +212,10 @@ export function LiveChatWidget() {
     setRateLimited(true);
     window.setTimeout(() => setRateLimited(false), 2000);
 
-    if (socketRef.current?.readyState === WebSocket.OPEN) {
+    if (
+      socketRef.current?.readyState === WebSocket.OPEN &&
+      socketSessionRef.current === sid
+    ) {
       socketRef.current.send(JSON.stringify({ type: "message", body: trimmed }));
       return;
     }

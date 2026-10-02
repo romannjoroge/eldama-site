@@ -157,6 +157,11 @@ const server = Bun.serve({
       }
     }
 
+    if (url.pathname === "/ws/presence") {
+      const upgraded = serverInstance.upgrade(req, { data: { kind: "presence" } });
+      return upgraded ? undefined : new Response("WebSocket upgrade failed", { status: 400, headers: cors() });
+    }
+
     if (url.pathname === "/ws/agent") {
       const upgraded = serverInstance.upgrade(req, {
         data: { kind: "agent", agentId: url.searchParams.get("agentId") || null },
@@ -187,6 +192,9 @@ const server = Bun.serve({
         server.publish("agents", JSON.stringify({ type: "presence", agentsOnline: agentSockets.size }));
         server.publish("visitors-presence", JSON.stringify({ type: "presence", agentsOnline: agentSockets.size }));
         ws.send(JSON.stringify({ type: "welcome", kind: "agent" }));
+      } else if (ws.data.kind === "presence") {
+        ws.subscribe("visitors-presence");
+        ws.send(JSON.stringify({ type: "presence", agentsOnline: agentSockets.size }));
       } else {
         ws.subscribe(`room:${ws.data.sessionId}`);
         ws.subscribe("visitors-presence");
@@ -260,6 +268,9 @@ const server = Bun.serve({
         agentSockets.delete(ws);
         ws.unsubscribe("agents");
         server.publish("agents", JSON.stringify({ type: "presence", agentsOnline: agentSockets.size }));
+        server.publish("visitors-presence", JSON.stringify({ type: "presence", agentsOnline: agentSockets.size }));
+      } else if (ws.data.kind === "presence") {
+        ws.unsubscribe("visitors-presence");
       } else {
         ws.unsubscribe(`room:${ws.data.sessionId}`);
         ws.unsubscribe("visitors-presence");
