@@ -59,10 +59,11 @@ export async function getChatSessionMessages(sessionId: string): Promise<{
   session: ChatSession;
   messages: ChatMessage[];
 }> {
-  return request(`internal/sessions/${encodeURIComponent(sessionId)}/messages`);
+  return request(`api/sessions/${encodeURIComponent(sessionId)}/messages`);
 }
 
 export async function addChatMessage(input: {
+  id?: string;
   sessionId: string;
   senderType: "visitor" | "agent";
   agentId?: string | null;
@@ -70,7 +71,7 @@ export async function addChatMessage(input: {
   markReadBy?: "visitor" | "agent";
 }): Promise<ChatMessage | null> {
   const result = await request<{ message: ChatMessage | null }>(
-    `internal/sessions/${encodeURIComponent(input.sessionId)}/messages`,
+    `api/sessions/${encodeURIComponent(input.sessionId)}/messages`,
     {
       method: "POST",
       body: JSON.stringify(input),

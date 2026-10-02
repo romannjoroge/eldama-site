@@ -5,6 +5,8 @@ export default [
   route("admin", "routes/admin.tsx"),
   route("api/track", "routes/api.track.tsx"),
   route("api/sessions", "routes/api/sessions.tsx"),
+  route("api/sessions/:sessionId/messages", "routes/api/session-messages.tsx"),
+  route("api/sessions/:sessionId/close", "routes/api/session-close.tsx"),
   route("services/:slug", "routes/services/$slug.tsx"),
   route("quote", "routes/quote.tsx"),
   route("*", "routes/catchall.tsx"),
