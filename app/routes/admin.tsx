@@ -4,26 +4,28 @@ import { Form, redirect } from "react-router";
 import type { Route } from "./+types/admin";
 import {
   clearAdminSessionCookie,
-  createAdminSessionCookie,
+  createAgentSessionCookie,
+  getAuthedAgent,
   isAdminRequest,
-  validateAdminCredentials,
+  validateAgentCredentials,
 } from "~/.server/admin-auth";
 import { getAdminDashboardData } from "~/.server/admin-store";
-
-type ChatMessage = {
-  id: string;
-  roomId: string;
-  sender: "visitor" | "admin" | "system";
-  name: string;
-  text: string;
-  createdAt: string;
-};
+import { listChatSessions } from "~/.server/chat-service";
+import type { ChatMessage, ChatSession } from "~/.server/chat-types";
 
 export async function loader({ request }: Route.LoaderArgs) {
-  const authenticated = isAdminRequest(request);
+  const authenticated = await isAdminRequest(request);
+  const agent = authenticated ? await getAuthedAgent(request) : null;
   return {
     authenticated,
+    agentId: agent?.id || null,
     dashboard: authenticated ? await getAdminDashboardData() : null,
+    chat: authenticated
+      ? {
+          open: await listChatSessions("open"),
+          closed: await listChatSessions("closed"),
+        }
+      : { open: [], closed: [] },
   };
 }
 
@@ -37,15 +39,16 @@ export async function action({ request }: Route.ActionArgs) {
     });
   }
 
-  const username = String(formData.get("username") || "");
+  const email = String(formData.get("email") || formData.get("username") || "");
   const password = String(formData.get("password") || "");
 
-  if (!validateAdminCredentials(username, password)) {
-    return { ok: false, error: "Invalid admin username or password." };
+  const agent = await validateAgentCredentials(email.trim(), password);
+  if (!agent) {
+    return { ok: false, error: "Invalid admin email or password." };
   }
 
   return redirect("/admin", {
-    headers: { "Set-Cookie": createAdminSessionCookie() },
+    headers: { "Set-Cookie": await createAgentSessionCookie(agent.id) },
   });
 }
 
@@ -61,7 +64,7 @@ export default function Admin({ loaderData, actionData }: Route.ComponentProps) 
     return <LoginPanel error={actionData?.error} />;
   }
 
-  return <Dashboard data={loaderData.dashboard} />;
+  return <Dashboard data={loaderData.dashboard} chat={loaderData.chat} agentId={loaderData.agentId} />;
 }
 
 function LoginPanel({ error }: { error?: string }) {
@@ -82,12 +85,13 @@ function LoginPanel({ error }: { error?: string }) {
 
           <Form method="post" reloadDocument className="mt-7 space-y-4">
             <input type="hidden" name="intent" value="login" />
-            <Field label="Username" htmlFor="admin-username">
+            <Field label="Email" htmlFor="admin-email">
               <input
-                id="admin-username"
-                name="username"
-                defaultValue="admin"
-                autoComplete="username"
+                id="admin-email"
+                name="email"
+                defaultValue="agent@eldama.co.ke"
+                type="email"
+                autoComplete="email"
                 className="input bg-white shadow-[inset_0_2px_5px_rgba(15,23,42,0.08)]"
               />
             </Field>
@@ -116,7 +120,15 @@ function LoginPanel({ error }: { error?: string }) {
   );
 }
 
-function Dashboard({ data }: { data: NonNullable<Route.ComponentProps["loaderData"]["dashboard"]> }) {
+function Dashboard({
+  data,
+  chat,
+  agentId,
+}: {
+  data: NonNullable<Route.ComponentProps["loaderData"]["dashboard"]>;
+  chat: { open: ChatSession[]; closed: ChatSession[] };
+  agentId: string | null;
+}) {
   const maxViews = Math.max(1, ...data.pageViews.map((item) => item.count));
 
   return (
@@ -267,7 +279,7 @@ function Dashboard({ data }: { data: NonNullable<Route.ComponentProps["loaderDat
 
         <section className="mt-6">
           <Panel title="Live chat console">
-            <AdminChat initialMessages={data.chats} />
+            <AgentChat open={chat.open} closed={chat.closed} agentId={agentId} />
           </Panel>
         </section>
       </div>
@@ -501,162 +513,300 @@ function FunnelGraphic({
   );
 }
 
-function appendUniqueMessages(current: ChatMessage[], next: ChatMessage) {
-  if (current.some((message) => message.id === next.id)) return current;
-  return [...current, next].slice(-200);
+function appendUnique(messages: ChatMessage[], next: ChatMessage) {
+  return messages.some((m) => m.id === next.id) ? messages : [...messages, next].slice(-200);
 }
 
-function AdminChat({ initialMessages }: { initialMessages: ChatMessage[] }) {
-  const [roomId, setRoomId] = useState(initialMessages[0]?.roomId || "");
-  const [messages, setMessages] = useState<ChatMessage[]>(() =>
-    initialMessages.slice().reverse(),
-  );
+function AgentChat({
+  open: initialOpen,
+  closed: initialClosed,
+  agentId,
+}: {
+  open: ChatSession[];
+  closed: ChatSession[];
+  agentId: string | null;
+}) {
+  const [tab, setTab] = useState<"open" | "closed">("open");
+  const [openRooms, setOpenRooms] = useState<ChatSession[]>(initialOpen);
+  const [closedRooms, setClosedRooms] = useState<ChatSession[]>(initialClosed);
+  const [activeId, setActiveId] = useState<string | null>(initialOpen[0]?.id || null);
+  const [history, setHistory] = useState<ChatMessage[]>([]);
+  const [context, setContext] = useState<ChatSession | null>(null);
   const [text, setText] = useState("");
   const [connected, setConnected] = useState(false);
   const socketRef = useRef<WebSocket | null>(null);
-
-  const rooms = useMemo(
-    () => [...new Set(messages.map((message) => message.roomId))],
-    [messages],
-  );
-  const activeRoom = roomId || rooms[0] || "lobby";
-  const activeMessages = messages.filter((message) => message.roomId === activeRoom);
+  const activeIdRef = useRef<string | null>(activeId);
 
   useEffect(() => {
-    const base = import.meta.env.VITE_CHAT_WS_URL || "ws://localhost:8787/ws/chat";
-    const socket = new WebSocket(`${base}?role=admin&room=admin-console`);
-    socketRef.current = socket;
-    socket.addEventListener("open", () => setConnected(true));
-    socket.addEventListener("close", () => setConnected(false));
-    socket.addEventListener("message", (event) => {
-      const payload = JSON.parse(event.data) as { type: string; message?: ChatMessage };
-      if (payload.type === "message" && payload.message) {
-        setMessages((current) => appendUniqueMessages(current, payload.message!));
-        setRoomId((current) => current || payload.message!.roomId);
-      }
-    });
-    return () => socket.close();
+    activeIdRef.current = activeId;
+  });
+
+  useEffect(() => {
+    const base = import.meta.env.VITE_CHAT_WS_URL || "ws://127.0.0.1:8787";
+    let reconnectTimer: number | undefined;
+    let closedByCleanup = false;
+    let attempt = 0;
+
+    const connect = () => {
+      const socket = new WebSocket(`${base}/ws/agent${agentId ? `?agentId=${agentId}` : ""}`);
+      socketRef.current = socket;
+      socket.addEventListener("open", () => {
+        attempt = 0;
+        setConnected(true);
+      });
+      socket.addEventListener("close", () => {
+        setConnected(false);
+        if (!closedByCleanup) {
+          const backoff = Math.min(1000 * Math.pow(2, attempt), 15000);
+          attempt += 1;
+          reconnectTimer = window.setTimeout(connect, backoff);
+        }
+      });
+      socket.addEventListener("message", (event) => {
+        const payload = JSON.parse(event.data) as {
+          type: string;
+          message?: ChatMessage;
+          agentsOnline?: boolean;
+        };
+        if (payload.type === "presence") return;
+        if (payload.type === "welcome") return;
+        if (payload.type === "message" && payload.message) {
+          const msg = payload.message!;
+          if (msg.sessionId === activeIdRef.current) {
+            setHistory((cur) => appendUnique(cur, msg));
+          }
+          // Bump unread/ordering for the room list (only if this is a visitor msg to another conversation).
+          const bump = (rooms: ChatSession[]) => {
+            const existing = rooms.find((s) => s.id === msg.sessionId);
+            if (!existing) return rooms;
+            const updated: ChatSession = {
+              ...existing,
+              last_message_at: msg.createdAt,
+              last_message_preview: msg.body.slice(0, 60),
+              unread_count:
+                msg.sessionId === activeIdRef.current
+                  ? existing.unread_count
+                  : existing.unread_count + (msg.senderType === "visitor" ? 1 : 0),
+            };
+            return [updated, ...rooms.filter((s) => s.id !== msg.sessionId)].sort(
+              (a, b) => (b.last_message_at || b.created_at).localeCompare(a.last_message_at || a.created_at),
+            );
+          };
+          setOpenRooms((rooms) => bump(rooms));
+          setClosedRooms((rooms) => bump(rooms));
+        }
+      });
+    };
+
+    connect();
+    return () => {
+      closedByCleanup = true;
+      if (reconnectTimer) window.clearTimeout(reconnectTimer);
+      socketRef.current?.close();
+    };
   }, []);
 
-  const send = () => {
+  async function loadConversation(id: string) {
+    setActiveId(id);
+    activeIdRef.current = id;
+    try {
+      const res = await fetch(`/api/sessions/${id}/messages`);
+      const data = (await res.json()) as { ok: boolean; session: ChatSession; messages: ChatMessage[] };
+      if (data.ok) {
+        setHistory(data.messages);
+        setContext(data.session);
+        // Reading the thread clears its unread badge locally.
+        setOpenRooms((rooms) =>
+          rooms.map((s) => (s.id === id ? { ...s, unread_count: 0 } : s)),
+        );
+        setClosedRooms((rooms) =>
+          rooms.map((s) => (s.id === id ? { ...s, unread_count: 0 } : s)),
+        );
+      }
+    } catch {
+      // keep current state
+    }
+  }
+
+  function selectTab(next: "open" | "closed") {
+    setTab(next);
+    const list = next === "open" ? openRooms : closedRooms;
+    if (list.length > 0) void loadConversation(list[0].id);
+    else {
+      setActiveId(null);
+      activeIdRef.current = null;
+      setHistory([]);
+      setContext(null);
+    }
+  }
+
+  async function reply() {
     const trimmed = text.trim();
-    if (!trimmed) return;
-    if (activeRoom === "lobby") {
-      setMessages((current) =>
-        appendUniqueMessages(current, {
-          id: crypto.randomUUID(),
-          roomId: "lobby",
-          sender: "system",
-          name: "System",
-          text: "Select a visitor room before replying.",
-          createdAt: new Date().toISOString(),
-        }),
-      );
-      return;
-    }
-
-    const message: ChatMessage = {
-      id: crypto.randomUUID(),
-      roomId: activeRoom,
-      sender: "admin",
-      name: "Eldama admin",
-      text: trimmed,
-      createdAt: new Date().toISOString(),
-    };
-    setMessages((current) => appendUniqueMessages(current, message));
-    if (socketRef.current?.readyState !== WebSocket.OPEN) {
-      setMessages((current) =>
-        appendUniqueMessages(current, {
-          id: crypto.randomUUID(),
-          roomId: activeRoom,
-          sender: "system",
-          name: "System",
-          text: "Reply queued locally, but the live chat server is not connected.",
-          createdAt: new Date().toISOString(),
-        }),
-      );
-      return;
-    }
-
-    socketRef.current.send(
-      JSON.stringify({
-        type: "message",
-        id: message.id,
-        roomId: activeRoom,
-        text: trimmed,
-        name: "Eldama admin",
-      }),
-    );
+    if (!trimmed || !activeId) return;
+    const sessionId = activeId;
+    const body = trimmed;
     setText("");
-  };
+    const messageId = crypto.randomUUID();
+    const optimistic: ChatMessage = {
+      id: messageId,
+      sessionId,
+      senderType: "agent",
+      agentId: null,
+      body,
+      createdAt: new Date().toISOString(),
+      readAt: new Date().toISOString(),
+    };
+    setHistory((cur) => appendUnique(cur, optimistic));
+    if (socketRef.current?.readyState === WebSocket.OPEN) {
+      socketRef.current.send(JSON.stringify({ type: "message", id: messageId, sessionId, body }));
+    } else {
+      try {
+        await fetch(`/api/sessions/${sessionId}/messages`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: messageId, body, senderType: "agent", agentId }),
+        });
+      } catch {
+        // Keep the optimistic message visible; the next history load can reconcile it.
+      }
+    }
+  }
+
+  async function closeConversation() {
+    if (!activeId) return;
+    try {
+      await fetch(`/api/sessions/${activeId}/close`, { method: "POST" });
+      setTab("closed");
+    } catch {
+      // ignore refresh errors for MVP
+    }
+  }
+
+  const list = tab === "open" ? openRooms : closedRooms;
+  const active = list.find((s) => s.id === activeId);
 
   return (
-    <div className="grid gap-4 lg:grid-cols-[240px_1fr]">
+    <div className="grid gap-4 lg:grid-cols-[280px_1fr]">
+      {/* Conversation list */}
       <aside className="rounded-[14px] border border-white bg-white/70 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)]">
-        <div className="mb-3 flex items-center justify-between">
-          <p className="text-sm font-bold">Rooms</p>
-          <span className="text-xs font-semibold text-graphite">
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <p className="text-sm font-bold">Conversations</p>
+          <span className={"text-xs font-semibold text-graphite " + (connected ? "text-primary" : "text-error")}>
             {connected ? "Connected" : "Offline"}
           </span>
         </div>
+        <div className="mb-3 flex gap-1 rounded-[8px] bg-cloud p-1">
+          <button
+            type="button"
+            onClick={() => selectTab("open")}
+            className={"flex-1 rounded-md px-2 py-1 text-xs font-semibold " + (tab === "open" ? "bg-primary text-white" : "text-ink")}
+          >
+            Open
+          </button>
+          <button
+            type="button"
+            onClick={() => selectTab("closed")}
+            className={"flex-1 rounded-md px-2 py-1 text-xs font-semibold " + (tab === "closed" ? "bg-primary text-white" : "text-ink")}
+          >
+            Closed
+          </button>
+        </div>
         <div className="space-y-2">
-          {rooms.length === 0 && <EmptyState text="No chat rooms yet." />}
-          {rooms.map((room) => (
+          {list.length === 0 && <EmptyState text={"No " + tab + " conversations."} />}
+          {list.map((session) => (
             <button
-              key={room}
+              key={session.id}
               type="button"
-              onClick={() => setRoomId(room)}
-              className={`w-full rounded-[10px] px-3 py-2 text-left text-sm font-semibold ${
-                activeRoom === room ? "bg-primary text-white" : "bg-cloud text-ink"
-              }`}
+              onClick={() => void loadConversation(session.id)}
+              className={"w-full rounded-[10px] px-3 py-2 text-left text-sm font-semibold " + (session.id === activeId ? "bg-primary text-white" : "bg-cloud text-ink")}
             >
-              Visitor {room.slice(0, 8)}
+              <span className="block truncate">
+                {session.visitor_name || session.visitor_email || "Visitor"}
+              </span>
+              <span className="block truncate text-[11px] opacity-75">
+                {session.last_message_preview || "No messages"}
+              </span>
+              <span className="flex items-center justify-between text-[11px] opacity-75">
+                <span>{formatDate(session.last_message_at || session.created_at)}</span>
+                {session.unread_count > 0 && (
+                  <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold text-white">
+                    {session.unread_count}
+                  </span>
+                )}
+              </span>
             </button>
           ))}
         </div>
       </aside>
 
+      {/* Conversation detail */}
       <div className="overflow-hidden rounded-[14px] border border-white bg-white/80 shadow-[0_8px_18px_rgba(15,23,42,0.08)]">
-        <div className="h-80 space-y-3 overflow-y-auto bg-[linear-gradient(145deg,#ffffff,#eef3f8)] p-4">
-          {activeMessages.length === 0 && <EmptyState text="Select a room or wait for a visitor message." />}
-          {activeMessages.map((message) => (
-            <div
-              key={message.id}
-              className={`max-w-[78%] rounded-[12px] px-3 py-2 text-sm ${
-                message.sender === "admin"
-                  ? "ml-auto bg-primary text-white"
-                  : message.sender === "system"
-                    ? "mx-auto bg-[#d6deea] text-graphite"
-                  : "bg-white text-ink shadow-[0_4px_12px_rgba(15,23,42,0.1)]"
-              }`}
-            >
-              <p className="text-[11px] font-bold opacity-70">{message.name}</p>
-              <p>{message.text}</p>
+        {!active && (
+          <div className="p-8">
+            <EmptyState text="Select a conversation to view its history." />
+          </div>
+        )}
+
+        {active && (
+          <>
+            {/* Visitor context panel */}
+            <div className="mb-3 rounded-[12px] border border-white bg-white/80 px-4 py-3 text-xs shadow-[inset_0_1px_0_rgba(255,255,255,0.9)]">
+              <p className="font-bold uppercase tracking-[0.12em] text-graphite">Visitor</p>
+              <div className="mt-1.5 grid gap-x-6 gap-y-1.5 sm:grid-cols-2">
+                <span><b>Name:</b> {context?.visitor_name || "—"}</span>
+                <span><b>Email:</b> {context?.visitor_email || "—"}</span>
+                <span><b>First seen:</b> {formatDate(context?.created_at)}</span>
+                <span><b>Status:</b> {active.status}</span>
+                <span className="sm:col-span-2"><b>Page:</b> <span className="break-all">{context?.page_url || "—"}</span></span>
+                <span className="sm:col-span-2"><b>User agent:</b> <span className="break-all">{context?.user_agent || "—"}</span></span>
+              </div>
             </div>
-          ))}
-        </div>
-        <form
-          className="flex gap-2 border-t border-hairline bg-white p-3"
-          onSubmit={(event) => {
-            event.preventDefault();
-            send();
-          }}
-        >
-          <input
-            className="input !h-10 flex-1"
-            value={text}
-            onChange={(event) => setText(event.target.value)}
-            placeholder="Reply to the active visitor..."
-          />
-          <button className="btn-primary !h-10" type="submit">
-            Reply
-          </button>
-        </form>
+
+            {/* Messages */}
+            <div className="h-72 space-y-3 overflow-y-auto bg-[linear-gradient(145deg,#ffffff,#eef3f8)] p-4">
+              {history.length === 0 && <EmptyState text="No messages in this conversation yet." />}
+              {history.map((message) => (
+                <div
+                  key={message.id}
+                  className={"max-w-[78%] rounded-[12px] px-3 py-2 text-sm " + (message.senderType === "agent" ? "ml-auto bg-primary text-white" : "bg-white text-ink shadow-[0_4px_12px_rgba(15,23,42,0.1)]")}
+                >
+                  <p className="text-[11px] font-bold opacity-70">
+                    {message.senderType === "agent" ? "You" : context?.visitor_name || "Visitor"}
+                  </p>
+                  <p>{message.body}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Reply + close */}
+            <div className="flex flex-wrap items-center gap-2 border-t border-hairline bg-white p-3">
+              <input
+                className="input !h-10 min-w-0 flex-1"
+                value={text}
+                onChange={(event) => setText(event.target.value)}
+                placeholder={"Reply to " + (context?.visitor_name || "visitor") + "..."}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    void reply();
+                  }
+                }}
+              />
+              <button type="button" className="btn-primary !h-10" onClick={() => void reply()}>
+                Reply
+              </button>
+              {active.status === "open" && (
+                <button type="button" className="btn-outline-ink !h-9 !px-3 !text-[12px]" onClick={() => void closeConversation()}>
+                  Close
+                </button>
+              )}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
 }
-
 function Field({
   label,
   htmlFor,
@@ -684,7 +834,7 @@ function EmptyState({ text }: { text: string }) {
   );
 }
 
-function formatDate(value: string) {
+function formatDate(value?: string | null) {
   if (!value) return "Unknown time";
   return new Intl.DateTimeFormat("en", {
     month: "short",
