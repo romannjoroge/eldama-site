@@ -179,7 +179,7 @@ Override them in `.env`:
 ADMIN_USER=admin
 ADMIN_PASSWORD=1234
 ADMIN_SESSION_SECRET=change-me-before-production
-VITE_CHAT_WS_URL=ws://localhost:8787/ws/chat
+VITE_CHAT_WS_URL=ws://127.0.0.1:8787
 ```
 
 The dashboard includes:
@@ -197,13 +197,35 @@ Analytics and quote/chat data are stored locally in `.eldama-admin/store.json`. 
 
 Visitor chat appears sitewide as a floating widget. Admin replies are managed from `/admin`.
 
-Run the websocket server with Bun:
+Run the React Router app and Bun chat service in separate terminals during development:
+
+```bash
+npm run dev
+```
 
 ```bash
 npm run realtime
 ```
 
-By default it listens on `ws://localhost:8787/ws/chat`. Set `REALTIME_PORT` or `VITE_CHAT_WS_URL` if the port or host changes.
+Initialize the database and seed an agent:
+
+```bash
+npm run db:migrate
+npm run db:seed -- agent@eldama.co.ke password123
+```
+
+The Bun service owns `data/chat.sqlite` and serves both WebSockets and the private HTTP API used by
+the React Router app. It binds to `127.0.0.1:8787` by default; visitors connect at
+`/ws/chat/:sessionId` and the admin console at `/ws/agent`. Set `REALTIME_PORT` or
+`VITE_CHAT_WS_URL` if the port or public WebSocket host changes. The app uses
+`CHAT_SERVICE_URL` and `CHAT_SERVICE_TOKEN` for server-to-server requests; use the same long,
+random token in both processes. For a separately hosted service, set `REALTIME_HOST=0.0.0.0`,
+configure `CHAT_SERVICE_URL` to its private address, and provide an explicit token. The service
+refuses non-local or production startup without that token. Set `CHAT_DB_PATH` on the Bun service
+and migration command to use a different SQLite file.
+
+Email notifications for new conversations use [Resend](https://resend.com). Configure
+`RESEND_API_KEY` and `SUPPORT_EMAIL` in `.env`; when unset, notifications are logged to stdout.
 
 ## Design Direction
 

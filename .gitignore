@@ -1,6 +1,7 @@
 .DS_Store
 .env
 /.eldama-admin/
+/data/
 /node_modules/
 
 # React Router
