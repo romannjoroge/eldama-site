@@ -646,8 +646,9 @@ function AgentChat({
     const sessionId = activeId;
     const body = trimmed;
     setText("");
+    const messageId = crypto.randomUUID();
     const optimistic: ChatMessage = {
-      id: crypto.randomUUID(),
+      id: messageId,
       sessionId,
       senderType: "agent",
       agentId: null,
@@ -657,16 +658,16 @@ function AgentChat({
     };
     setHistory((cur) => appendUnique(cur, optimistic));
     if (socketRef.current?.readyState === WebSocket.OPEN) {
-      socketRef.current.send(JSON.stringify({ type: "message", sessionId, body }));
+      socketRef.current.send(JSON.stringify({ type: "message", id: messageId, sessionId, body }));
     } else {
       try {
         await fetch(`/api/sessions/${sessionId}/messages`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ body, senderType: "agent", agentId }),
+          body: JSON.stringify({ id: messageId, body, senderType: "agent", agentId }),
         });
       } catch {
-        // keep optimistic message; it is queued for the next WS connect
+        // Keep the optimistic message visible; the next history load can reconcile it.
       }
     }
   }

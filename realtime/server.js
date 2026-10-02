@@ -5,6 +5,7 @@
  * Bun-owned chat service. Provides:
  *   GET  /health
  *   HTTP /internal/*         - authenticated app-to-service API
+ *   GET/POST /api/sessions/:sessionId/messages - authenticated message API
  *   WS   /ws/agent              - agent console live channel
  *   WS   /ws/chat/:sessionId    - visitor live channel
  *
@@ -21,6 +22,7 @@ import {
   getSession,
   getSessionMessages,
   listSessions,
+  normalizeMessageId,
   sanitizeText,
   validateAgentCredentials,
 } from "./chat-store.js";
@@ -129,6 +131,28 @@ async function handleInternalRequest(req, url) {
   return json({ error: "not found" }, 404);
 }
 
+async function handleSessionMessagesRequest(req, sessionId) {
+  const session = getSession(sessionId);
+  if (!session) return json({ ok: false, error: "unknown session" }, 404);
+
+  if (req.method === "GET") {
+    return json({ ok: true, session, messages: getSessionMessages(sessionId) });
+  }
+
+  if (req.method === "POST") {
+    const body = await readJson(req);
+    if (!body || !["visitor", "agent"].includes(body.senderType) || !String(body.body || "").trim()) {
+      return json({ ok: false, error: "invalid message" }, 400);
+    }
+    const message = addMessage({ ...body, sessionId });
+    if (!message) return json({ ok: false, error: "send failed" }, 500);
+    sendToSession(sessionId, { type: "message", message });
+    return json({ ok: true, message });
+  }
+
+  return json({ ok: false, error: "method not allowed" }, 405);
+}
+
 const server = Bun.serve({
   hostname,
   port,
@@ -154,6 +178,17 @@ const server = Bun.serve({
       } catch (error) {
         console.error("[chat-api] request failed:", error);
         return json({ error: "chat service error" }, 500);
+      }
+    }
+
+    const sessionMessagesMatch = url.pathname.match(/^\/api\/sessions\/([^/]+)\/messages$/);
+    if (sessionMessagesMatch && ["GET", "POST"].includes(req.method)) {
+      if (!authorized(req)) return json({ ok: false, error: "unauthorized" }, 401);
+      try {
+        return await handleSessionMessagesRequest(req, decodeURIComponent(sessionMessagesMatch[1]));
+      } catch (error) {
+        console.error("[chat-api] message request failed:", error);
+        return json({ ok: false, error: "chat service error" }, 500);
       }
     }
 
@@ -229,7 +264,7 @@ const server = Bun.serve({
           db.query(
             "INSERT INTO sessions (id, visitor_name, visitor_email, page_url, user_agent, status, created_at, last_message_at) VALUES (?, ?, ?, ?, ?, 'open', ?, ?)",
           ).run(newId, session.visitor_name, session.visitor_email, session.page_url, session.user_agent, now, now);
-          const message = insertMessage(newId, "visitor", null, payload.body);
+          const message = insertMessage(newId, "visitor", null, payload.body, payload.id);
           ws.data.sessionId = newId;
           ws.unsubscribe(`room:${sessionId}`);
           ws.subscribe(`room:${newId}`);
@@ -238,7 +273,7 @@ const server = Bun.serve({
           return;
         }
 
-        const message = insertMessage(sessionId, "visitor", null, payload.body);
+        const message = insertMessage(sessionId, "visitor", null, payload.body, payload.id);
         sendToSession(sessionId, { type: "message", message });
         return;
       }
@@ -257,7 +292,7 @@ const server = Bun.serve({
           const sessionId = payload.sessionId;
           const session = db.query("SELECT id FROM sessions WHERE id = ?").get(sessionId);
           if (!session) return;
-          const message = insertMessage(sessionId, "agent", ws.data.agentId || null, payload.body);
+          const message = insertMessage(sessionId, "agent", ws.data.agentId || null, payload.body, payload.id);
           sendToSession(sessionId, { type: "message", message });
           return;
         }
@@ -279,14 +314,17 @@ const server = Bun.serve({
   },
 });
 
-function insertMessage(sessionId, senderType, agentId, body) {
-  const id = crypto.randomUUID();
+function insertMessage(sessionId, senderType, agentId, body, requestedId) {
+  const id = normalizeMessageId(requestedId);
   const now = new Date().toISOString();
-  db.query(
-    "INSERT INTO messages (id, session_id, sender_type, agent_id, body, created_at, read_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+  const result = db.query(
+    "INSERT OR IGNORE INTO messages (id, session_id, sender_type, agent_id, body, created_at, read_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
   ).run(id, sessionId, senderType, agentId, sanitizeText(body), now, now);
-  db.query("UPDATE sessions SET last_message_at = ? WHERE id = ?").run(now, sessionId);
-  return mapMessage(db.query("SELECT * FROM messages WHERE id = ?").get(id));
+  if (result.changes > 0) {
+    db.query("UPDATE sessions SET last_message_at = ? WHERE id = ?").run(now, sessionId);
+  }
+  const row = db.query("SELECT * FROM messages WHERE id = ? AND session_id = ?").get(id, sessionId);
+  return row ? mapMessage(row) : null;
 }
 
 function mapMessage(row) {

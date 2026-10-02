@@ -68,11 +68,11 @@ export function addMessage(input) {
   const session = getSession(input.sessionId);
   if (!session) return null;
 
-  const id = crypto.randomUUID();
+  const id = normalizeMessageId(input.id);
   const now = new Date().toISOString();
   const readAt = input.markReadBy ? now : null;
-  db.query(
-    `INSERT INTO messages (id, session_id, sender_type, agent_id, body, created_at, read_at)
+  const result = db.query(
+    `INSERT OR IGNORE INTO messages (id, session_id, sender_type, agent_id, body, created_at, read_at)
      VALUES (?, ?, ?, ?, ?, ?, ?)`,
   ).run(
     id,
@@ -83,8 +83,16 @@ export function addMessage(input) {
     now,
     readAt,
   );
-  db.query("UPDATE sessions SET last_message_at = ? WHERE id = ?").run(now, input.sessionId);
+  if (result.changes > 0) {
+    db.query("UPDATE sessions SET last_message_at = ? WHERE id = ?").run(now, input.sessionId);
+  }
   return getSessionMessages(input.sessionId).find((message) => message.id === id) || null;
+}
+
+export function normalizeMessageId(id) {
+  return typeof id === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)
+    ? id
+    : crypto.randomUUID();
 }
 
 export function closeSession(sessionId) {

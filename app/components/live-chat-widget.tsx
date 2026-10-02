@@ -69,7 +69,6 @@ export function LiveChatWidget() {
   const [rateLimited, setRateLimited] = useState(false);
   const socketRef = useRef<WebSocket | null>(null);
   const socketSessionRef = useRef<string | null>(null);
-  const pendingRef = useRef<string[]>([]);
   const pageUrl = useMemo(() => (typeof window === "undefined" ? "" : window.location.href), []);
   const userAgent = useMemo(() => (typeof window === "undefined" ? "" : window.navigator.userAgent), []);
 
@@ -135,8 +134,6 @@ export function LiveChatWidget() {
       socket.addEventListener("open", (event) => {
         attempt = 0;
         setStatus("ready");
-        const pending = pendingRef.current.splice(0);
-        for (const item of pending) socket.send(item);
       });
 
       socket.addEventListener("close", () => {
@@ -216,21 +213,20 @@ export function LiveChatWidget() {
       socketRef.current?.readyState === WebSocket.OPEN &&
       socketSessionRef.current === sid
     ) {
-      socketRef.current.send(JSON.stringify({ type: "message", body: trimmed }));
+      socketRef.current.send(JSON.stringify({ type: "message", id: message.id, body: trimmed }));
       return;
     }
 
     // WebSocket unavailable: use the REST fallback; it still persists and is
     // delivered to the agent console via the DB-backed notification.
-    pendingRef.current.push(JSON.stringify({ type: "message", body: trimmed }));
     try {
       await fetch(`/api/sessions/${sid}/messages`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ body: trimmed }),
+        body: JSON.stringify({ id: message.id, body: trimmed }),
       });
     } catch {
-      // keep queued; connection-on-open will flush pending
+      // Keep the optimistic message visible; the next history load can reconcile it.
     }
   }
 

@@ -81,6 +81,7 @@ export async function action({ request }: { request: Request }) {
       if (!body) return json({ ok: false, error: "empty message" }, 400);
       const isFirstVisitorMessage = senderType === "visitor" && session.last_message_at === null;
       const message = await addChatMessage({
+        id: typeof raw?.id === "string" ? raw.id : undefined,
         sessionId,
         senderType,
         agentId: agent?.id || null,
