@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 
 type MessagePayload = {
   id: string;
@@ -68,7 +69,6 @@ export function LiveChatWidget() {
   const [text, setText] = useState("");
   const [rateLimited, setRateLimited] = useState(false);
   const socketRef = useRef<WebSocket | null>(null);
-  const socketSessionRef = useRef<string | null>(null);
   const pageUrl = useMemo(() => (typeof window === "undefined" ? "" : window.location.href), []);
   const userAgent = useMemo(() => (typeof window === "undefined" ? "" : window.navigator.userAgent), []);
 
@@ -129,7 +129,6 @@ export function LiveChatWidget() {
         : "/ws/presence";
       const socket = new WebSocket(`${base}${socketPath}`);
       socketRef.current = socket;
-      socketSessionRef.current = sessionId;
 
       socket.addEventListener("open", (event) => {
         attempt = 0;
@@ -180,18 +179,7 @@ export function LiveChatWidget() {
 
     const sid = await ensureSession().catch(() => null);
     if (!sid) {
-      setMessages([
-        ...messages,
-        {
-          id: crypto.randomUUID(),
-          sessionId: "",
-          senderType: "visitor",
-          agentId: null,
-          body: "Could not start a chat session. Please try again.",
-          createdAt: new Date().toISOString(),
-          readAt: null,
-        },
-      ]);
+      toast.error("Could not start the chat. Please try again.");
       return;
     }
 
@@ -209,24 +197,31 @@ export function LiveChatWidget() {
     setRateLimited(true);
     window.setTimeout(() => setRateLimited(false), 2000);
 
-    if (
-      socketRef.current?.readyState === WebSocket.OPEN &&
-      socketSessionRef.current === sid
-    ) {
-      socketRef.current.send(JSON.stringify({ type: "message", id: message.id, body: trimmed }));
-      return;
-    }
-
-    // WebSocket unavailable: use the REST fallback; it still persists and is
-    // delivered to the agent console via the DB-backed notification.
     try {
-      await fetch(`/api/sessions/${sid}/messages`, {
+      const response = await fetch(`/api/sessions/${sid}/messages`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: message.id, body: trimmed }),
       });
-    } catch {
-      // Keep the optimistic message visible; the next history load can reconcile it.
+      const result = (await response.json().catch(() => ({}))) as {
+        ok?: boolean;
+        error?: string;
+        message?: MessagePayload;
+        session?: SessionInfo;
+      };
+      if (!response.ok || !result.ok || !result.message) {
+        throw new Error(result.error || "Message could not be sent.");
+      }
+      setMessages((current) => [...current.filter((item) => item.id !== message.id), result.message!]);
+      if (result.session) {
+        writeJson(SESSION_KEY, { id: result.session.id });
+        setSessionId(result.session.id);
+      }
+    } catch (error) {
+      setMessages((current) => current.filter((item) => item.id !== message.id));
+      setText(trimmed);
+      setRateLimited(false);
+      toast.error(error instanceof Error ? error.message : "Message could not be sent.");
     }
   }
 
@@ -238,7 +233,7 @@ export function LiveChatWidget() {
     if (honeypot) return;
     writeJson(PROFILE_KEY, { name: name.trim(), email: email.trim() });
     setStatus("connecting");
-    void ensureSession();
+    void ensureSession().catch(() => toast.error("Could not start the chat. Please try again."));
   }
 
   return (
@@ -259,7 +254,10 @@ export function LiveChatWidget() {
             </div>
           </header>
 
-          <div className="h-72 space-y-3 overflow-y-auto bg-[linear-gradient(145deg,#ffffff,#eef2f7)] p-4">
+          <div
+            data-lenis-prevent
+            className="h-72 space-y-3 overflow-y-auto overscroll-contain bg-[linear-gradient(145deg,#ffffff,#eef2f7)] p-4"
+          >
             {/* Pre-chat form */}
             {!sessionId && (
               <form
