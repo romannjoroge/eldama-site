@@ -4,6 +4,7 @@ export type StoredAgent = {
   password_hash: string;
   name: string | null;
   created_at: string;
+  deleted: boolean;
 };
 
 export function createAgent(input: {

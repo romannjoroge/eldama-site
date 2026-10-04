@@ -32,7 +32,7 @@ export function createSession(input) {
     sanitizeText(input.pageUrl || ""),
     sanitizeText(input.userAgent || ""),
     now,
-    now,
+    null,
   );
   return mapSession(db.query("SELECT * FROM sessions WHERE id = ?").get(id));
 }
@@ -126,7 +126,7 @@ export function hashPassword(password) {
 
 export function validateAgentCredentials(email, password) {
   const agent = findAgentByEmail(email);
-  if (!agent) return null;
+  if (!agent || agent.deleted) return null;
   const [salt, storedHash] = agent.password_hash.split(":");
   if (!salt || !storedHash) return null;
   const candidate = createHash("sha256").update(salt + password).digest("hex");
@@ -146,7 +146,7 @@ export function getAgentBySession(sessionId) {
   const row = db.query(
     `SELECT a.* FROM agent_sessions s
      JOIN agents a ON a.id = s.agent_id
-     WHERE s.id = ? AND s.expires_at > ?`,
+    WHERE s.id = ? AND s.expires_at > ? AND a.deleted = 0`,
   ).get(sessionId, new Date().toISOString());
   return row ? publicAgent(mapAgent(row)) : null;
 }
@@ -195,5 +195,49 @@ function mapAgent(row) {
     password_hash: String(row.password_hash),
     name: row.name ? String(row.name) : null,
     created_at: String(row.created_at),
+    deleted: Boolean(row.deleted),
   };
+}
+
+export function markSessionRead(sessionId) {
+  if (!getSession(sessionId)) return false;
+  db.query(
+    "UPDATE messages SET read_at = ? WHERE session_id = ? AND sender_type = 'visitor' AND read_at IS NULL",
+  ).run(new Date().toISOString(), sessionId);
+  return true;
+}
+
+export function listAgents() {
+  return db.query("SELECT * FROM agents WHERE deleted = 0 ORDER BY created_at DESC, email ASC").all().map((row) => publicAgent(mapAgent(row)));
+}
+
+export function updateAgent(id, input) {
+  const agent = db.query("SELECT id FROM agents WHERE id = ? AND deleted = 0").get(id);
+  if (!agent) return null;
+  const duplicate = db.query("SELECT id FROM agents WHERE email = ? AND id <> ?").get(
+    sanitizeText(input.email).toLowerCase(),
+    id,
+  );
+  if (duplicate) throw new Error("Agent email is already in use");
+
+  if (input.password) {
+    db.query("UPDATE agents SET name = ?, email = ?, password_hash = ? WHERE id = ?").run(
+      sanitizeText(input.name),
+      sanitizeText(input.email).toLowerCase(),
+      hashPassword(input.password),
+      id,
+    );
+  } else {
+    db.query("UPDATE agents SET name = ?, email = ? WHERE id = ?").run(
+      sanitizeText(input.name),
+      sanitizeText(input.email).toLowerCase(),
+      id,
+    );
+  }
+  return findAgentByEmail(input.email);
+}
+
+export function deleteAgent(id) {
+  const result = db.query("UPDATE agents SET deleted = 1 WHERE id = ? AND deleted = 0").run(id);
+  return result.changes > 0;
 }

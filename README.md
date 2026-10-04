@@ -218,8 +218,10 @@ The Bun service owns `data/chat.sqlite` and serves both WebSockets and the priva
 the React Router app. It binds to `127.0.0.1:8787` by default; visitors connect at
 `/ws/chat/:sessionId` and the admin console at `/ws/agent`. Set `REALTIME_PORT` or
 `VITE_CHAT_WS_URL` if the port or public WebSocket host changes. The app uses
-`CHAT_SERVICE_URL` and `CHAT_SERVICE_TOKEN` for server-to-server requests; use the same long,
-random token in both processes. For a separately hosted service, set `REALTIME_HOST=0.0.0.0`,
+`CHAT_SERVICE_URL` and `CHAT_SERVICE_TOKEN` for visitor-side and login-bootstrap server requests;
+use the same long, random token in both processes. After login, admin API and WebSocket requests
+use a per-agent bearer token tied to the agent session; it expires after 24 hours and is rejected
+if the agent is soft-deleted. For a separately hosted service, set `REALTIME_HOST=0.0.0.0`,
 configure `CHAT_SERVICE_URL` to its private address, and provide an explicit token. The service
 refuses non-local or production startup without that token. Set `CHAT_DB_PATH` on the Bun service
 and migration command to use a different SQLite file.
