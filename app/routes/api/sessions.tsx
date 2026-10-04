@@ -1,4 +1,4 @@
-import { getAuthedAgent, isAdminRequest } from "~/.server/admin-auth";
+import { getAgentAccessToken, getAuthedAgent } from "~/.server/admin-auth";
 import {
   addChatMessage,
   ChatServiceError,
@@ -6,6 +6,7 @@ import {
   createChatSession,
   getChatSession,
   getChatSessionMessages,
+  markChatSessionRead,
 } from "~/.server/chat-service";
 import { notifyFirstMessage } from "~/.server/email";
 
@@ -37,7 +38,10 @@ export async function loader({ request }: { request: Request }) {
   const parts = new URL(request.url).pathname.split("/").filter(Boolean);
   if (parts.length === 4 && parts[0] === "api" && parts[1] === "sessions" && parts[3] === "messages") {
     try {
-      const result = await getChatSessionMessages(decodeURIComponent(parts[2]));
+      const result = await getChatSessionMessages(
+        decodeURIComponent(parts[2]),
+        getAgentAccessToken(request) || undefined,
+      );
       return json({ ok: true, ...result });
     } catch (error) {
       return serviceError(error);
@@ -64,37 +68,56 @@ export async function action({ request }: { request: Request }) {
 
     if (parts.length === 4 && parts[0] === "api" && parts[1] === "sessions" && parts[3] === "messages") {
       const sessionId = decodeURIComponent(parts[2]);
-      const session = await getChatSession(sessionId);
-      if (!session) return json({ ok: false, error: "unknown session" }, 404);
-
       const senderType = raw?.senderType === "agent" ? "agent" : "visitor";
-      const authenticated = senderType === "agent" ? await isAdminRequest(request) : false;
-      if (senderType === "agent" && !authenticated) {
+      const agentToken = senderType === "agent" ? getAgentAccessToken(request) : null;
+      if (senderType === "agent" && !agentToken) {
         return json({ ok: false, error: "unauthorized" }, 401);
       }
+      const session = await getChatSession(sessionId, agentToken || undefined);
+      if (!session) return json({ ok: false, error: "unknown session" }, 404);
+
       const agent = senderType === "agent" ? await getAuthedAgent(request) : null;
+      if (senderType === "agent" && !agent) return json({ ok: false, error: "unauthorized" }, 401);
       if (senderType === "visitor" && rateLimited(sessionId)) {
         return json({ ok: false, error: "slow down" }, 429);
       }
 
       const body = String(raw?.body || "").replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim().slice(0, 2000);
       if (!body) return json({ ok: false, error: "empty message" }, 400);
-      const isFirstVisitorMessage = senderType === "visitor" && session.last_message_at === null;
+      const targetSession = senderType === "visitor" && session.status === "closed"
+        ? await createChatSession({
+            name: session.visitor_name || "",
+            email: session.visitor_email || "",
+            pageUrl: session.page_url || "",
+            userAgent: session.user_agent || "",
+          })
+        : session;
+      const isFirstVisitorMessage = senderType === "visitor" && targetSession.last_message_at === null;
       const message = await addChatMessage({
         id: typeof raw?.id === "string" ? raw.id : undefined,
-        sessionId,
+        sessionId: targetSession.id,
         senderType,
         agentId: agent?.id || null,
         body,
-        markReadBy: senderType,
-      });
-      if (message && isFirstVisitorMessage) void notifyFirstMessage(message, session);
-      return message ? json({ ok: true, message }) : json({ ok: false, error: "send failed" }, 500);
+        markReadBy: senderType === "agent" ? "agent" : undefined,
+      }, agentToken || undefined);
+      if (message && isFirstVisitorMessage) void notifyFirstMessage(message, targetSession);
+      return message
+        ? json({ ok: true, message, session: targetSession.id === session.id ? undefined : targetSession })
+        : json({ ok: false, error: "send failed" }, 500);
+    }
+
+    if (parts.length === 4 && parts[0] === "api" && parts[1] === "sessions" && parts[3] === "read") {
+      const agentToken = getAgentAccessToken(request);
+      if (!agentToken || !(await getAuthedAgent(request))) return json({ ok: false, error: "unauthorized" }, 401);
+      const read = await markChatSessionRead(decodeURIComponent(parts[2]), agentToken);
+      return read ? json({ ok: true }) : json({ ok: false, error: "unknown session" }, 404);
     }
 
     if (parts.length === 4 && parts[0] === "api" && parts[1] === "sessions" && parts[3] === "close") {
-      if (!(await isAdminRequest(request))) return json({ ok: false, error: "unauthorized" }, 401);
-      const closed = await closeChatSession(decodeURIComponent(parts[2]));
+      const agentToken = getAgentAccessToken(request);
+      if (!agentToken || !(await getAuthedAgent(request))) return json({ ok: false, error: "unauthorized" }, 401);
+      const closed = await closeChatSession(decodeURIComponent(parts[2]), agentToken);
       return closed ? json({ ok: true }) : json({ ok: false, error: "unknown session" }, 404);
     }
 

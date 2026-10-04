@@ -166,21 +166,23 @@ Quote CTAs can preselect one or more services before opening the form.
 
 ## Admin Panel
 
-The admin panel lives at `/admin`.
+Sign in at `/admin`. Reports are at `/admin/reports`, live chat at `/admin/chat`, and all signed-in
+agents can update their own name, email, and password at `/admin/profile`. Only the admin account
+can open `/admin/users` to create, edit, or remove agents.
 
-Default development credentials:
-
-- Username: `admin`
-- Password: `1234`
-
-Override them in `.env`:
+Configure the initial admin credentials in the backend `.env` read by Bun:
 
 ```bash
-ADMIN_USER=admin
-ADMIN_PASSWORD=1234
+ADMIN_EMAIL=admin@example.com
+ADMIN_PASSWORD=use-a-long-random-password
+ADMIN_NAME=Eldama Administrator
 ADMIN_SESSION_SECRET=change-me-before-production
 VITE_CHAT_WS_URL=ws://127.0.0.1:8787
 ```
+
+The admin is provisioned in SQLite by the Bun service. These values are never exposed to the
+browser. Once provisioned, profile changes persist in the database; password changes revoke the
+agent's other sessions. Agent bearer sessions expire after 24 hours.
 
 The dashboard includes:
 
@@ -195,7 +197,7 @@ Analytics and quote/chat data are stored locally in `.eldama-admin/store.json`. 
 
 ## Live Chat
 
-Visitor chat appears sitewide as a floating widget. Admin replies are managed from `/admin`.
+Visitor chat appears sitewide as a floating widget. Admin replies are managed from `/admin/chat`.
 
 Run the React Router app and Bun chat service in separate terminals during development:
 
@@ -207,7 +209,7 @@ npm run dev
 npm run realtime
 ```
 
-Initialize the database and seed an agent:
+Before starting Bun, initialize the database and optionally seed a regular agent:
 
 ```bash
 npm run db:migrate
@@ -218,8 +220,10 @@ The Bun service owns `data/chat.sqlite` and serves both WebSockets and the priva
 the React Router app. It binds to `127.0.0.1:8787` by default; visitors connect at
 `/ws/chat/:sessionId` and the admin console at `/ws/agent`. Set `REALTIME_PORT` or
 `VITE_CHAT_WS_URL` if the port or public WebSocket host changes. The app uses
-`CHAT_SERVICE_URL` and `CHAT_SERVICE_TOKEN` for server-to-server requests; use the same long,
-random token in both processes. For a separately hosted service, set `REALTIME_HOST=0.0.0.0`,
+`CHAT_SERVICE_URL` and `CHAT_SERVICE_TOKEN` for visitor-side and login-bootstrap server requests;
+use the same long, random token in both processes. After login, admin API and WebSocket requests
+use a per-agent bearer token tied to the agent session; it expires after 24 hours and is rejected
+if the agent is soft-deleted. For a separately hosted service, set `REALTIME_HOST=0.0.0.0`,
 configure `CHAT_SERVICE_URL` to its private address, and provide an explicit token. The service
 refuses non-local or production startup without that token. Set `CHAT_DB_PATH` on the Bun service
 and migration command to use a different SQLite file.

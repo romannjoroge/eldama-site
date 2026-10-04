@@ -25,7 +25,7 @@ export default function Home() {
     <>
       <Hero />
       <TrustBar />
-      <MarqueeBand />
+      {/* <MarqueeBand /> */}
       <ServicesGrid />
       <Coverage />
       <WhyEldama />

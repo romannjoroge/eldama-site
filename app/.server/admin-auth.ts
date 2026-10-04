@@ -3,16 +3,7 @@ import { createChatAgentSession, getChatAgentBySession, validateChatAgent } from
 import type { ChatAgent } from "./chat-types";
 
 const SESSION_COOKIE = "eldama_admin";
-const SESSION_MAX_AGE = 60 * 60 * 8;
-
-// Legacy env fallback for the analytics login (kept working).
-function adminUser() {
-  return process.env.ADMIN_USER || "admin";
-}
-
-function adminPassword() {
-  return process.env.ADMIN_PASSWORD || "1234";
-}
+const SESSION_MAX_AGE = 60 * 60 * 24;
 
 function sessionSecret() {
   return process.env.ADMIN_SESSION_SECRET || "eldama-dev-admin-secret";
@@ -53,54 +44,43 @@ export async function createAgentSessionCookie(agentId: string) {
   const agentSessionId = await createChatAgentSession(agentId, new Date(expiresAtMs).toISOString());
   const payload = `${agentSessionId}.${expiresAtMs}`;
   const token = `${payload}.${sign(payload)}`;
-  return `${SESSION_COOKIE}=${encodeURIComponent(token)}; Path=/admin; HttpOnly; SameSite=Lax; Max-Age=${SESSION_MAX_AGE}`;
+  return `${SESSION_COOKIE}=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${SESSION_MAX_AGE}`;
 }
 
 export function clearAdminSessionCookie() {
-  return `${SESSION_COOKIE}=; Path=/admin; HttpOnly; SameSite=Lax; Max-Age=0`;
+  return [
+    `${SESSION_COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`,
+    `${SESSION_COOKIE}=; Path=/admin; HttpOnly; SameSite=Lax; Max-Age=0`,
+  ];
 }
 
-// Resolve the authenticated agent from the request cookie.
-export async function getAuthedAgent(request: Request): Promise<ChatAgent | null> {
+export function getAgentAccessToken(request: Request): string | null {
   const token = parseCookies(request.headers.get("Cookie"))[SESSION_COOKIE];
   if (!token) return null;
 
   const parts = token.split(".");
   if (parts.length !== 3) return null;
 
-  const [agentId, expiresAtRaw, signature] = parts;
+  const [agentSessionId, expiresAtRaw, signature] = parts;
   const expiresAt = Number(expiresAtRaw);
-  if (!agentId || !Number.isFinite(expiresAt) || expiresAt < Date.now()) return null;
+  if (!agentSessionId || !Number.isFinite(expiresAt) || expiresAt < Date.now()) return null;
 
-  const payload = `${agentId}.${expiresAtRaw}`;
+  const payload = `${agentSessionId}.${expiresAtRaw}`;
   if (!safeEqual(signature, sign(payload))) return null;
-  return getChatAgentBySession(agentId);
+  return agentSessionId;
 }
 
-// Legacy: keep the old username/password login for the analytics dashboard.
-export function validateAdminCredentials(username: string, password: string) {
-  return safeEqual(username, adminUser()) && safeEqual(password, adminPassword());
+// Resolve the authenticated agent by asking Bun to validate the bearer token.
+export async function getAuthedAgent(request: Request): Promise<ChatAgent | null> {
+  const accessToken = getAgentAccessToken(request);
+  if (!accessToken) return null;
+  return getChatAgentBySession(accessToken);
 }
 
-export function createAdminSessionCookie() {
-  const expiresAt = Date.now() + SESSION_MAX_AGE * 1000;
-  const payload = `${adminUser()}.${expiresAt}`;
-  const token = `${payload}.${sign(payload)}`;
-  return `${SESSION_COOKIE}=${encodeURIComponent(token)}; Path=/admin; HttpOnly; SameSite=Lax; Max-Age=${SESSION_MAX_AGE}`;
+export async function isAgentRequest(request: Request) {
+  return (await getAuthedAgent(request)) !== null;
 }
 
 export async function isAdminRequest(request: Request) {
-  return (await getAuthedAgent(request)) !== null || legacyTokenValid(request);
-}
-
-function legacyTokenValid(request: Request) {
-  const token = parseCookies(request.headers.get("Cookie"))[SESSION_COOKIE];
-  if (!token) return false;
-  const parts = token.split(".");
-  if (parts.length !== 3) return false;
-  const [username, expiresAtRaw, signature] = parts;
-  const expiresAt = Number(expiresAtRaw);
-  if (!username || !Number.isFinite(expiresAt) || expiresAt < Date.now()) return false;
-  const payload = `${username}.${expiresAtRaw}`;
-  return username === adminUser() && safeEqual(signature, sign(payload));
+  return (await getAuthedAgent(request))?.is_admin === true;
 }
