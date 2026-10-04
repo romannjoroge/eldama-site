@@ -2,31 +2,20 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Form, redirect } from "react-router";
 
 import type { Route } from "./+types/admin";
+import { AdminPage, useToast, type ToastKind } from "~/components/admin-ui";
 import {
   clearAdminSessionCookie,
   createAgentSessionCookie,
-  getAuthedAgent,
   isAdminRequest,
   validateAgentCredentials,
 } from "~/.server/admin-auth";
-import { getAdminDashboardData } from "~/.server/admin-store";
-import { listChatSessions } from "~/.server/chat-service";
 import type { ChatMessage, ChatSession } from "~/.server/chat-types";
+import type { getAdminDashboardData } from "~/.server/admin-store";
 
 export async function loader({ request }: Route.LoaderArgs) {
   const authenticated = await isAdminRequest(request);
-  const agent = authenticated ? await getAuthedAgent(request) : null;
-  return {
-    authenticated,
-    agentId: agent?.id || null,
-    dashboard: authenticated ? await getAdminDashboardData() : null,
-    chat: authenticated
-      ? {
-          open: await listChatSessions("open"),
-          closed: await listChatSessions("closed"),
-        }
-      : { open: [], closed: [] },
-  };
+  if (authenticated) return redirect("/admin/reports");
+  return { authenticated: false };
 }
 
 export async function action({ request }: Route.ActionArgs) {
@@ -34,8 +23,10 @@ export async function action({ request }: Route.ActionArgs) {
   const intent = String(formData.get("intent") || "login");
 
   if (intent === "logout") {
+    const headers = new Headers();
+    for (const cookie of clearAdminSessionCookie()) headers.append("Set-Cookie", cookie);
     return redirect("/admin", {
-      headers: { "Set-Cookie": clearAdminSessionCookie() },
+      headers,
     });
   }
 
@@ -47,9 +38,10 @@ export async function action({ request }: Route.ActionArgs) {
     return { ok: false, error: "Invalid admin email or password." };
   }
 
-  return redirect("/admin", {
-    headers: { "Set-Cookie": await createAgentSessionCookie(agent.id) },
-  });
+  const headers = new Headers();
+  for (const cookie of clearAdminSessionCookie()) headers.append("Set-Cookie", cookie);
+  headers.append("Set-Cookie", await createAgentSessionCookie(agent.id));
+  return redirect("/admin/reports", { headers });
 }
 
 export function meta({}: Route.MetaArgs) {
@@ -60,11 +52,13 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function Admin({ loaderData, actionData }: Route.ComponentProps) {
-  if (!loaderData.authenticated || !loaderData.dashboard) {
-    return <LoginPanel error={actionData?.error} />;
-  }
+  const { notify } = useToast();
 
-  return <Dashboard data={loaderData.dashboard} chat={loaderData.chat} agentId={loaderData.agentId} />;
+  useEffect(() => {
+    if (actionData?.error) notify(actionData.error, "error");
+  }, [actionData, notify]);
+
+  return <LoginPanel error={actionData?.error} />;
 }
 
 function LoginPanel({ error }: { error?: string }) {
@@ -120,37 +114,18 @@ function LoginPanel({ error }: { error?: string }) {
   );
 }
 
-function Dashboard({
+export type AdminDashboardData = Awaited<ReturnType<typeof getAdminDashboardData>>;
+
+export function Dashboard({
   data,
-  chat,
-  agentId,
 }: {
-  data: NonNullable<Route.ComponentProps["loaderData"]["dashboard"]>;
-  chat: { open: ChatSession[]; closed: ChatSession[] };
-  agentId: string | null;
+  data: AdminDashboardData;
 }) {
   const maxViews = Math.max(1, ...data.pageViews.map((item) => item.count));
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(135deg,#f6f7fa,#dce3ee)] text-ink">
-      <header className="sticky top-0 z-30 border-b border-white/70 bg-white/70 shadow-[0_8px_24px_rgba(15,23,42,0.12)] backdrop-blur">
-        <div className="container-site flex h-16 items-center justify-between gap-4">
-          <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-primary">
-              Eldama Command Panel
-            </p>
-            <h1 className="text-xl font-semibold">Dashboard</h1>
-          </div>
-          <Form method="post">
-            <input type="hidden" name="intent" value="logout" />
-            <button className="btn-outline-ink !h-9 !px-4 !text-[12px]" type="submit">
-              Log out
-            </button>
-          </Form>
-        </div>
-      </header>
-
-      <div className="container-site py-8">
+    <AdminPage title="Reports">
+      <main className="container-site py-8">
         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
           <MetricCard label="Visits" value={data.totals.visits} tone="blue" />
           <MetricCard label="Sessions" value={data.totals.sessions} tone="slate" />
@@ -277,13 +252,8 @@ function Dashboard({
           </Panel>
         </section>
 
-        <section className="mt-6">
-          <Panel title="Live chat console">
-            <AgentChat open={chat.open} closed={chat.closed} agentId={agentId} />
-          </Panel>
-        </section>
-      </div>
-    </div>
+      </main>
+    </AdminPage>
   );
 }
 
@@ -517,14 +487,16 @@ function appendUnique(messages: ChatMessage[], next: ChatMessage) {
   return messages.some((m) => m.id === next.id) ? messages : [...messages, next].slice(-200);
 }
 
-function AgentChat({
+export function AgentChat({
   open: initialOpen,
   closed: initialClosed,
-  agentId,
+  agentToken,
+  notify,
 }: {
   open: ChatSession[];
   closed: ChatSession[];
-  agentId: string | null;
+  agentToken: string;
+  notify: (message: string, kind?: ToastKind) => void;
 }) {
   const [tab, setTab] = useState<"open" | "closed">("open");
   const [openRooms, setOpenRooms] = useState<ChatSession[]>(initialOpen);
@@ -548,11 +520,11 @@ function AgentChat({
     let attempt = 0;
 
     const connect = () => {
-      const socket = new WebSocket(`${base}/ws/agent${agentId ? `?agentId=${agentId}` : ""}`);
+      const socket = new WebSocket(`${base}/ws/agent`);
       socketRef.current = socket;
       socket.addEventListener("open", () => {
         attempt = 0;
-        setConnected(true);
+        socket.send(JSON.stringify({ type: "auth", token: agentToken }));
       });
       socket.addEventListener("close", () => {
         setConnected(false);
@@ -566,10 +538,29 @@ function AgentChat({
         const payload = JSON.parse(event.data) as {
           type: string;
           message?: ChatMessage;
+          session?: ChatSession;
           agentsOnline?: boolean;
+          sessionId?: string;
         };
         if (payload.type === "presence") return;
-        if (payload.type === "welcome") return;
+        if (payload.type === "welcome") {
+          setConnected(true);
+          return;
+        }
+        if (payload.type === "session" && payload.session) {
+          setOpenRooms((rooms) => [
+            payload.session!,
+            ...rooms.filter((room) => room.id !== payload.session!.id),
+          ]);
+          setClosedRooms((rooms) => rooms.filter((room) => room.id !== payload.session!.id));
+        }
+        if (payload.type === "read" && payload.sessionId) {
+          const clearUnread = (rooms: ChatSession[]) => rooms.map((room) =>
+            room.id === payload.sessionId ? { ...room, unread_count: 0 } : room,
+          );
+          setOpenRooms(clearUnread);
+          setClosedRooms(clearUnread);
+        }
         if (payload.type === "message" && payload.message) {
           const msg = payload.message!;
           if (msg.sessionId === activeIdRef.current) {
@@ -594,6 +585,12 @@ function AgentChat({
           };
           setOpenRooms((rooms) => bump(rooms));
           setClosedRooms((rooms) => bump(rooms));
+          if (msg.senderType === "visitor" && msg.sessionId === activeIdRef.current) {
+            void fetch(`/api/sessions/${msg.sessionId}/read`, { method: "POST" }).then(async (response) => {
+              const result = await response.json().catch(() => ({}));
+              if (!response.ok || !result.ok) notify(result.error || "Could not mark messages as read.", "error");
+            }).catch(() => notify("Could not mark messages as read.", "error"));
+          }
         }
       });
     };
@@ -604,7 +601,7 @@ function AgentChat({
       if (reconnectTimer) window.clearTimeout(reconnectTimer);
       socketRef.current?.close();
     };
-  }, []);
+  }, [agentToken]);
 
   async function loadConversation(id: string) {
     setActiveId(id);
@@ -612,19 +609,18 @@ function AgentChat({
     try {
       const res = await fetch(`/api/sessions/${id}/messages`);
       const data = (await res.json()) as { ok: boolean; session: ChatSession; messages: ChatMessage[] };
-      if (data.ok) {
-        setHistory(data.messages);
-        setContext(data.session);
-        // Reading the thread clears its unread badge locally.
-        setOpenRooms((rooms) =>
-          rooms.map((s) => (s.id === id ? { ...s, unread_count: 0 } : s)),
-        );
-        setClosedRooms((rooms) =>
-          rooms.map((s) => (s.id === id ? { ...s, unread_count: 0 } : s)),
-        );
+      if (!res.ok || !data.ok) throw new Error("error" in data ? String(data.error) : "Could not load this conversation.");
+      setHistory(data.messages);
+      setContext(data.session);
+      const readResponse = await fetch(`/api/sessions/${id}/read`, { method: "POST" });
+      const readResult = await readResponse.json().catch(() => ({}));
+      if (!readResponse.ok || !readResult.ok) {
+        throw new Error(readResult.error || "Could not mark messages as read.");
       }
-    } catch {
-      // keep current state
+      setOpenRooms((rooms) => rooms.map((room) => room.id === id ? { ...room, unread_count: 0 } : room));
+      setClosedRooms((rooms) => rooms.map((room) => room.id === id ? { ...room, unread_count: 0 } : room));
+    } catch (error) {
+      notify(error instanceof Error ? error.message : "Could not load this conversation.", "error");
     }
   }
 
@@ -657,28 +653,36 @@ function AgentChat({
       readAt: new Date().toISOString(),
     };
     setHistory((cur) => appendUnique(cur, optimistic));
-    if (socketRef.current?.readyState === WebSocket.OPEN) {
-      socketRef.current.send(JSON.stringify({ type: "message", id: messageId, sessionId, body }));
-    } else {
-      try {
-        await fetch(`/api/sessions/${sessionId}/messages`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id: messageId, body, senderType: "agent", agentId }),
-        });
-      } catch {
-        // Keep the optimistic message visible; the next history load can reconcile it.
+    try {
+      const response = await fetch(`/api/sessions/${sessionId}/messages`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: messageId, body, senderType: "agent" }),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok || !result.ok || !result.message) {
+        throw new Error(result.error || "Message could not be sent.");
       }
+      setHistory((cur) => appendUnique(cur, result.message));
+    } catch (error) {
+      setHistory((cur) => cur.filter((message) => message.id !== messageId));
+      setText(body);
+      notify(error instanceof Error ? error.message : "Message could not be sent.", "error");
     }
   }
 
   async function closeConversation() {
-    if (!activeId) return;
+    const conversation = active;
+    if (!activeId || !conversation) return;
     try {
-      await fetch(`/api/sessions/${activeId}/close`, { method: "POST" });
+      const response = await fetch(`/api/sessions/${activeId}/close`, { method: "POST" });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok || !result.ok) throw new Error(result.error || "Could not close this conversation.");
       setTab("closed");
-    } catch {
-      // ignore refresh errors for MVP
+      setOpenRooms((rooms) => rooms.filter((room) => room.id !== activeId));
+      setClosedRooms((rooms) => [{ ...conversation, status: "closed" }, ...rooms.filter((room) => room.id !== activeId)]);
+    } catch (error) {
+      notify(error instanceof Error ? error.message : "Could not close this conversation.", "error");
     }
   }
 
