@@ -3,7 +3,7 @@ import { createChatAgentSession, getChatAgentBySession, validateChatAgent } from
 import type { ChatAgent } from "./chat-types";
 
 const SESSION_COOKIE = "eldama_admin";
-const SESSION_MAX_AGE = 60 * 60 * 8;
+const SESSION_MAX_AGE = 60 * 60 * 24;
 
 // Legacy env fallback for the analytics login (kept working).
 function adminUser() {
@@ -53,28 +53,37 @@ export async function createAgentSessionCookie(agentId: string) {
   const agentSessionId = await createChatAgentSession(agentId, new Date(expiresAtMs).toISOString());
   const payload = `${agentSessionId}.${expiresAtMs}`;
   const token = `${payload}.${sign(payload)}`;
-  return `${SESSION_COOKIE}=${encodeURIComponent(token)}; Path=/admin; HttpOnly; SameSite=Lax; Max-Age=${SESSION_MAX_AGE}`;
+  return `${SESSION_COOKIE}=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${SESSION_MAX_AGE}`;
 }
 
 export function clearAdminSessionCookie() {
-  return `${SESSION_COOKIE}=; Path=/admin; HttpOnly; SameSite=Lax; Max-Age=0`;
+  return [
+    `${SESSION_COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`,
+    `${SESSION_COOKIE}=; Path=/admin; HttpOnly; SameSite=Lax; Max-Age=0`,
+  ];
 }
 
-// Resolve the authenticated agent from the request cookie.
-export async function getAuthedAgent(request: Request): Promise<ChatAgent | null> {
+export function getAgentAccessToken(request: Request): string | null {
   const token = parseCookies(request.headers.get("Cookie"))[SESSION_COOKIE];
   if (!token) return null;
 
   const parts = token.split(".");
   if (parts.length !== 3) return null;
 
-  const [agentId, expiresAtRaw, signature] = parts;
+  const [agentSessionId, expiresAtRaw, signature] = parts;
   const expiresAt = Number(expiresAtRaw);
-  if (!agentId || !Number.isFinite(expiresAt) || expiresAt < Date.now()) return null;
+  if (!agentSessionId || !Number.isFinite(expiresAt) || expiresAt < Date.now()) return null;
 
-  const payload = `${agentId}.${expiresAtRaw}`;
+  const payload = `${agentSessionId}.${expiresAtRaw}`;
   if (!safeEqual(signature, sign(payload))) return null;
-  return getChatAgentBySession(agentId);
+  return agentSessionId;
+}
+
+// Resolve the authenticated agent by asking Bun to validate the bearer token.
+export async function getAuthedAgent(request: Request): Promise<ChatAgent | null> {
+  const accessToken = getAgentAccessToken(request);
+  if (!accessToken) return null;
+  return getChatAgentBySession(accessToken);
 }
 
 // Legacy: keep the old username/password login for the analytics dashboard.
@@ -86,7 +95,7 @@ export function createAdminSessionCookie() {
   const expiresAt = Date.now() + SESSION_MAX_AGE * 1000;
   const payload = `${adminUser()}.${expiresAt}`;
   const token = `${payload}.${sign(payload)}`;
-  return `${SESSION_COOKIE}=${encodeURIComponent(token)}; Path=/admin; HttpOnly; SameSite=Lax; Max-Age=${SESSION_MAX_AGE}`;
+  return `${SESSION_COOKIE}=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${SESSION_MAX_AGE}`;
 }
 
 export async function isAdminRequest(request: Request) {
