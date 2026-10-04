@@ -5,15 +5,6 @@ import type { ChatAgent } from "./chat-types";
 const SESSION_COOKIE = "eldama_admin";
 const SESSION_MAX_AGE = 60 * 60 * 24;
 
-// Legacy env fallback for the analytics login (kept working).
-function adminUser() {
-  return process.env.ADMIN_USER || "admin";
-}
-
-function adminPassword() {
-  return process.env.ADMIN_PASSWORD || "1234";
-}
-
 function sessionSecret() {
   return process.env.ADMIN_SESSION_SECRET || "eldama-dev-admin-secret";
 }
@@ -86,30 +77,10 @@ export async function getAuthedAgent(request: Request): Promise<ChatAgent | null
   return getChatAgentBySession(accessToken);
 }
 
-// Legacy: keep the old username/password login for the analytics dashboard.
-export function validateAdminCredentials(username: string, password: string) {
-  return safeEqual(username, adminUser()) && safeEqual(password, adminPassword());
-}
-
-export function createAdminSessionCookie() {
-  const expiresAt = Date.now() + SESSION_MAX_AGE * 1000;
-  const payload = `${adminUser()}.${expiresAt}`;
-  const token = `${payload}.${sign(payload)}`;
-  return `${SESSION_COOKIE}=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${SESSION_MAX_AGE}`;
+export async function isAgentRequest(request: Request) {
+  return (await getAuthedAgent(request)) !== null;
 }
 
 export async function isAdminRequest(request: Request) {
-  return (await getAuthedAgent(request)) !== null || legacyTokenValid(request);
-}
-
-function legacyTokenValid(request: Request) {
-  const token = parseCookies(request.headers.get("Cookie"))[SESSION_COOKIE];
-  if (!token) return false;
-  const parts = token.split(".");
-  if (parts.length !== 3) return false;
-  const [username, expiresAtRaw, signature] = parts;
-  const expiresAt = Number(expiresAtRaw);
-  if (!username || !Number.isFinite(expiresAt) || expiresAt < Date.now()) return false;
-  const payload = `${username}.${expiresAtRaw}`;
-  return username === adminUser() && safeEqual(signature, sign(payload));
+  return (await getAuthedAgent(request))?.is_admin === true;
 }

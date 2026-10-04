@@ -3,7 +3,7 @@ import { redirect, useFetcher } from "react-router";
 
 import type { Route } from "./+types/admin.users";
 import { AdminPage, useToast } from "~/components/admin-ui";
-import { getAgentAccessToken } from "~/.server/admin-auth";
+import { getAgentAccessToken, isAdminRequest } from "~/.server/admin-auth";
 import {
   ChatServiceError,
   createChatAgent,
@@ -28,6 +28,7 @@ type AgentActionData = {
 export async function loader({ request }: Route.LoaderArgs) {
   const agentToken = getAgentAccessToken(request);
   if (!agentToken) throw redirect("/admin");
+  if (!(await isAdminRequest(request))) throw redirect("/admin/chat");
   try {
     return { agents: await listChatAgents(agentToken), error: null as string | null };
   } catch (error) {
@@ -40,7 +41,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 
 export async function action({ request }: Route.ActionArgs) {
   const agentToken = getAgentAccessToken(request);
-  if (!agentToken) {
+  if (!agentToken || !(await isAdminRequest(request))) {
     return json({ ok: false, error: "You are not authorized to manage agents." }, 401);
   }
 
@@ -103,7 +104,7 @@ export default function AdminUsers({ loaderData }: Route.ComponentProps) {
   }, [fetcher.data, notify]);
 
   return (
-    <AdminPage title="Agents">
+    <AdminPage title="Agents" isAdmin>
       <main className="container-site grid gap-6 py-8 xl:grid-cols-[minmax(300px,0.7fr)_minmax(0,1.3fr)]">
         <section className="rounded-[14px] border border-white/80 bg-white/75 p-5 shadow-[0_8px_22px_rgba(15,23,42,0.1)]">
           <h2 className="text-lg font-semibold">Create agent</h2>

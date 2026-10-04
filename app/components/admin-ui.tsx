@@ -13,7 +13,7 @@ export function useToast() {
   return { notify };
 }
 
-export function AdminNavigation({ title }: { title: string }) {
+export function AdminNavigation({ title, isAdmin }: { title: string; isAdmin: boolean }) {
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     "rounded-[7px] px-3 py-2 text-sm font-semibold " + (isActive ? "bg-primary text-white" : "text-ink hover:bg-white/70");
 
@@ -28,7 +28,8 @@ export function AdminNavigation({ title }: { title: string }) {
           <nav aria-label="Admin pages" className="flex flex-wrap items-center gap-1">
             <NavLink to="/admin/reports" className={linkClass}>Reports</NavLink>
             <NavLink to="/admin/chat" className={linkClass}>Live chat</NavLink>
-            <NavLink to="/admin/users" className={linkClass}>Agents</NavLink>
+            {isAdmin && <NavLink to="/admin/users" className={linkClass}>Agents</NavLink>}
+            <NavLink to="/admin/profile" className={linkClass}>Profile</NavLink>
           </nav>
           <Form method="post" action="/admin">
             <input type="hidden" name="intent" value="logout" />
@@ -40,13 +41,14 @@ export function AdminNavigation({ title }: { title: string }) {
   );
 }
 
-export function AdminPage({ title, children }: {
+export function AdminPage({ title, children, isAdmin = false }: {
   title: string;
   children: React.ReactNode;
+  isAdmin?: boolean;
 }) {
   return (
     <div className="min-h-screen bg-[linear-gradient(135deg,#f6f7fa,#dce3ee)] text-ink">
-      <AdminNavigation title={title} />
+      <AdminNavigation title={title} isAdmin={isAdmin} />
       {children}
     </div>
   );

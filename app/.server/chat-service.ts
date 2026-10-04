@@ -159,3 +159,19 @@ export async function updateChatAgent(id: string, input: { name: string; email: 
 export async function deleteChatAgent(id: string, accessToken?: string): Promise<void> {
   await request(`internal/admin/agents/${encodeURIComponent(id)}`, { method: "DELETE" }, accessToken);
 }
+
+export async function getChatAgentProfile(accessToken: string): Promise<ChatAgent> {
+  const result = await request<{ agent: ChatAgent }>("internal/agent/profile", {}, accessToken);
+  return result.agent;
+}
+
+export async function updateChatAgentProfile(
+  input: { name: string; email: string; password?: string },
+  accessToken: string,
+): Promise<ChatAgent> {
+  const result = await request<{ agent: ChatAgent }>("internal/agent/profile", {
+    method: "PATCH",
+    body: JSON.stringify(input),
+  }, accessToken);
+  return result.agent;
+}

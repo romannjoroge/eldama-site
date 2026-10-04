@@ -29,4 +29,5 @@ export type ChatAgent = {
   email: string;
   name: string | null;
   created_at: string;
+  is_admin: boolean;
 };

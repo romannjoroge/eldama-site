@@ -3,14 +3,14 @@ import { redirect } from "react-router";
 
 import type { Route } from "./+types/admin.chat";
 import { AdminPage, useToast } from "~/components/admin-ui";
-import { getAgentAccessToken, getAuthedAgent } from "~/.server/admin-auth";
+import { getAgentAccessToken, getAuthedAgent, isAgentRequest } from "~/.server/admin-auth";
 import { listChatSessions } from "~/.server/chat-service";
 import type { ChatSession } from "~/.server/chat-types";
 import { AgentChat } from "./admin";
 
 export async function loader({ request }: Route.LoaderArgs) {
   const agentToken = getAgentAccessToken(request);
-  if (!agentToken) throw redirect("/admin");
+  if (!agentToken || !(await isAgentRequest(request))) throw redirect("/admin");
   const agent = await getAuthedAgent(request);
   if (!agent) throw redirect("/admin");
   try {
@@ -18,12 +18,13 @@ export async function loader({ request }: Route.LoaderArgs) {
       listChatSessions("open", agentToken),
       listChatSessions("closed", agentToken),
     ]);
-    return { open, closed, agentToken, error: null as string | null };
+    return { open, closed, agentToken, isAdmin: agent.is_admin, error: null as string | null };
   } catch (error) {
     return {
       open: [] as ChatSession[],
       closed: [] as ChatSession[],
       agentToken,
+      isAdmin: agent.is_admin,
       error: error instanceof Error ? error.message : "Could not load chat sessions.",
     };
   }
@@ -42,6 +43,7 @@ export default function AdminChat({ loaderData }: Route.ComponentProps) {
     open: [] as ChatSession[],
     closed: [] as ChatSession[],
     agentToken: "",
+    isAdmin: false,
     error: "Could not load chat sessions.",
   };
 
@@ -50,7 +52,7 @@ export default function AdminChat({ loaderData }: Route.ComponentProps) {
   }, [data.error, notify]);
 
   return (
-    <AdminPage title="Live chat">
+    <AdminPage title="Live chat" isAdmin={data.isAdmin}>
       <main className="container-site py-8">
         <AgentChat
           open={data.open}

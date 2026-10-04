@@ -118,6 +118,39 @@ export function createAgent(input) {
   return findAgentByEmail(input.email);
 }
 
+export function provisionAdminAccount({ email, password, name }) {
+  const normalizedEmail = sanitizeText(email).toLowerCase();
+  const normalizedName = sanitizeText(name || "Administrator");
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail) || !password) {
+    throw new Error("ADMIN_EMAIL and ADMIN_PASSWORD must be configured with valid values.");
+  }
+
+  db.run("BEGIN IMMEDIATE");
+  try {
+    let admin = db.query("SELECT id FROM agents WHERE is_admin = 1 ORDER BY created_at ASC LIMIT 1").get();
+    if (admin) {
+      db.query("UPDATE agents SET is_admin = 0 WHERE is_admin = 1 AND id <> ?").run(admin.id);
+      db.query("UPDATE agents SET deleted = 0 WHERE id = ?").run(admin.id);
+    } else {
+      admin = db.query("SELECT id FROM agents WHERE email = ?").get(normalizedEmail);
+      if (admin) {
+        db.query(
+          "UPDATE agents SET name = ?, password_hash = ?, is_admin = 1, deleted = 0 WHERE id = ?",
+        ).run(normalizedName, hashPassword(password), admin.id);
+      } else {
+        createAgent({ email: normalizedEmail, name: normalizedName, passwordHash: hashPassword(password) });
+        db.query("UPDATE agents SET is_admin = 1 WHERE email = ?").run(normalizedEmail);
+      }
+    }
+    db.run("COMMIT");
+  } catch (error) {
+    db.run("ROLLBACK");
+    throw error;
+  }
+
+  return findAgentByEmail(normalizedEmail);
+}
+
 export function hashPassword(password) {
   const salt = crypto.randomUUID();
   const hash = createHash("sha256").update(salt + password).digest("hex");
@@ -157,6 +190,7 @@ function publicAgent(agent) {
     email: agent.email,
     name: agent.name,
     created_at: agent.created_at,
+    is_admin: agent.is_admin,
   };
 }
 
@@ -196,6 +230,7 @@ function mapAgent(row) {
     name: row.name ? String(row.name) : null,
     created_at: String(row.created_at),
     deleted: Boolean(row.deleted),
+    is_admin: Boolean(row.is_admin),
   };
 }
 
@@ -208,11 +243,11 @@ export function markSessionRead(sessionId) {
 }
 
 export function listAgents() {
-  return db.query("SELECT * FROM agents WHERE deleted = 0 ORDER BY created_at DESC, email ASC").all().map((row) => publicAgent(mapAgent(row)));
+  return db.query("SELECT * FROM agents WHERE deleted = 0 AND is_admin = 0 ORDER BY created_at DESC, email ASC").all().map((row) => publicAgent(mapAgent(row)));
 }
 
 export function updateAgent(id, input) {
-  const agent = db.query("SELECT id FROM agents WHERE id = ? AND deleted = 0").get(id);
+  const agent = db.query("SELECT id FROM agents WHERE id = ? AND deleted = 0 AND is_admin = 0").get(id);
   if (!agent) return null;
   const duplicate = db.query("SELECT id FROM agents WHERE email = ? AND id <> ?").get(
     sanitizeText(input.email).toLowerCase(),
@@ -237,7 +272,26 @@ export function updateAgent(id, input) {
   return findAgentByEmail(input.email);
 }
 
+export function updateAgentProfile(id, input, currentSessionId) {
+  const agent = db.query("SELECT id FROM agents WHERE id = ? AND deleted = 0").get(id);
+  if (!agent) return null;
+  const email = sanitizeText(input.email).toLowerCase();
+  const duplicate = db.query("SELECT id FROM agents WHERE email = ? AND id <> ?").get(email, id);
+  if (duplicate) throw new Error("An agent with that email is already in use");
+
+  if (input.password) {
+    db.query("UPDATE agents SET name = ?, email = ?, password_hash = ? WHERE id = ?").run(
+      sanitizeText(input.name), email, hashPassword(input.password), id,
+    );
+    db.query("DELETE FROM agent_sessions WHERE agent_id = ? AND id <> ?").run(id, currentSessionId);
+  } else {
+    db.query("UPDATE agents SET name = ?, email = ? WHERE id = ?").run(sanitizeText(input.name), email, id);
+  }
+  const updated = db.query("SELECT * FROM agents WHERE id = ?").get(id);
+  return updated ? publicAgent(mapAgent(updated)) : null;
+}
+
 export function deleteAgent(id) {
-  const result = db.query("UPDATE agents SET deleted = 1 WHERE id = ? AND deleted = 0").run(id);
+  const result = db.query("UPDATE agents SET deleted = 1 WHERE id = ? AND deleted = 0 AND is_admin = 0").run(id);
   return result.changes > 0;
 }

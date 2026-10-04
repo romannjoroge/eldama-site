@@ -27,8 +27,10 @@ import {
   listSessions,
   markSessionRead,
   normalizeMessageId,
+  provisionAdminAccount,
   sanitizeText,
   updateAgent,
+  updateAgentProfile,
   validateAgentCredentials,
   hashPassword,
 } from "./chat-store.js";
@@ -43,6 +45,15 @@ if (
 ) {
   throw new Error("Set CHAT_SERVICE_TOKEN when the chat service is exposed beyond localhost or runs in production.");
 }
+
+if (!process.env.ADMIN_EMAIL || !process.env.ADMIN_PASSWORD) {
+  throw new Error("Set ADMIN_EMAIL and ADMIN_PASSWORD in the Bun service environment.");
+}
+provisionAdminAccount({
+  email: process.env.ADMIN_EMAIL,
+  password: process.env.ADMIN_PASSWORD,
+  name: process.env.ADMIN_NAME || "Administrator",
+});
 
 // Track how many agent consoles are connected right now. An agent is
 // considered "online" while at least one /ws/agent socket is open.
@@ -91,6 +102,32 @@ function json(body, status = 200) {
 }
 
 async function handleInternalRequest(req, url, authenticatedAgent) {
+  if (url.pathname === "/internal/agent/profile") {
+    if (!authenticatedAgent) return json({ error: "unauthorized" }, 401);
+    if (req.method === "GET") {
+      return json({ agent: getAgentBySession(bearerToken(req)) });
+    }
+    if (req.method === "PATCH") {
+      const body = await readJson(req);
+      const name = sanitizeText(body?.name || "");
+      const email = sanitizeText(body?.email || "").toLowerCase();
+      const password = String(body?.password || "");
+      if (!name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || (password && password.length < 8)) {
+        return json({ error: "Enter a name, valid email, and an optional password of at least 8 characters" }, 400);
+      }
+      try {
+        const agent = updateAgentProfile(authenticatedAgent.id, { name, email, password }, bearerToken(req));
+        return agent ? json({ agent }) : json({ error: "agent not found" }, 404);
+      } catch (error) {
+        if (error instanceof Error && error.message === "An agent with that email is already in use") {
+          return json({ error: error.message }, 409);
+        }
+        throw error;
+      }
+    }
+    return json({ error: "method not allowed" }, 405);
+  }
+
   const sessionMatch = url.pathname.match(/^\/internal\/sessions\/([^/]+)(?:\/(messages|close|read))?$/);
   if (req.method === "POST" && url.pathname === "/internal/sessions") {
     const body = await readJson(req);
@@ -143,10 +180,12 @@ async function handleInternalRequest(req, url, authenticatedAgent) {
   }
 
   if (req.method === "GET" && url.pathname === "/internal/admin/agents") {
+    if (!authenticatedAgent?.is_admin) return json({ error: "admin role required" }, 403);
     return json({ agents: listAgents() });
   }
 
   if (req.method === "POST" && url.pathname === "/internal/admin/agents") {
+    if (!authenticatedAgent?.is_admin) return json({ error: "admin role required" }, 403);
     const body = await readJson(req);
     const email = sanitizeText(body?.email || "").toLowerCase();
     const name = sanitizeText(body?.name || "");
@@ -163,6 +202,7 @@ async function handleInternalRequest(req, url, authenticatedAgent) {
 
   const agentMatch = url.pathname.match(/^\/internal\/admin\/agents\/([^/]+)$/);
   if (agentMatch && req.method === "PATCH") {
+    if (!authenticatedAgent?.is_admin) return json({ error: "admin role required" }, 403);
     const body = await readJson(req);
     const email = sanitizeText(body?.email || "").toLowerCase();
     const name = sanitizeText(body?.name || "");
@@ -182,6 +222,7 @@ async function handleInternalRequest(req, url, authenticatedAgent) {
   }
 
   if (agentMatch && req.method === "DELETE") {
+    if (!authenticatedAgent?.is_admin) return json({ error: "admin role required" }, 403);
     const deleted = deleteAgent(decodeURIComponent(agentMatch[1]));
     return deleted ? json({ ok: true }) : json({ error: "agent not found" }, 404);
   }
@@ -262,6 +303,7 @@ const server = Bun.serve({
         (url.pathname === "/internal/admin/agent-sessions" && req.method === "POST");
       const needsAgent =
         url.pathname.startsWith("/internal/admin/") && !loginBootstrap ||
+        url.pathname.startsWith("/internal/agent/") ||
         /^\/internal\/sessions\/[^/]+\/(messages|close|read)$/.test(url.pathname);
       const serviceAccess = serviceAuthorized(req);
       const authenticatedAgent = needsAgent || !serviceAccess ? agentFromRequest(req) : null;

@@ -6,15 +6,18 @@ import { AdminPage, useToast, type ToastKind } from "~/components/admin-ui";
 import {
   clearAdminSessionCookie,
   createAgentSessionCookie,
-  isAdminRequest,
+  getAuthedAgent,
+  isAgentRequest,
   validateAgentCredentials,
 } from "~/.server/admin-auth";
 import type { ChatMessage, ChatSession } from "~/.server/chat-types";
 import type { getAdminDashboardData } from "~/.server/admin-store";
 
 export async function loader({ request }: Route.LoaderArgs) {
-  const authenticated = await isAdminRequest(request);
-  if (authenticated) return redirect("/admin/reports");
+  if (await isAgentRequest(request)) {
+    const agent = await getAuthedAgent(request);
+    return redirect(agent?.is_admin ? "/admin/reports" : "/admin/chat");
+  }
   return { authenticated: false };
 }
 
@@ -41,7 +44,7 @@ export async function action({ request }: Route.ActionArgs) {
   const headers = new Headers();
   for (const cookie of clearAdminSessionCookie()) headers.append("Set-Cookie", cookie);
   headers.append("Set-Cookie", await createAgentSessionCookie(agent.id));
-  return redirect("/admin/reports", { headers });
+  return redirect(agent.is_admin ? "/admin/reports" : "/admin/chat", { headers });
 }
 
 export function meta({}: Route.MetaArgs) {
@@ -83,7 +86,6 @@ function LoginPanel({ error }: { error?: string }) {
               <input
                 id="admin-email"
                 name="email"
-                defaultValue="agent@eldama.co.ke"
                 type="email"
                 autoComplete="email"
                 className="input bg-white shadow-[inset_0_2px_5px_rgba(15,23,42,0.08)]"
@@ -94,7 +96,6 @@ function LoginPanel({ error }: { error?: string }) {
                 id="admin-password"
                 name="password"
                 type="password"
-                defaultValue="1234"
                 autoComplete="current-password"
                 className="input bg-white shadow-[inset_0_2px_5px_rgba(15,23,42,0.08)]"
               />
@@ -118,13 +119,15 @@ export type AdminDashboardData = Awaited<ReturnType<typeof getAdminDashboardData
 
 export function Dashboard({
   data,
+  isAdmin,
 }: {
   data: AdminDashboardData;
+  isAdmin: boolean;
 }) {
   const maxViews = Math.max(1, ...data.pageViews.map((item) => item.count));
 
   return (
-    <AdminPage title="Reports">
+    <AdminPage title="Reports" isAdmin={isAdmin}>
       <main className="container-site py-8">
         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
           <MetricCard label="Visits" value={data.totals.visits} tone="blue" />

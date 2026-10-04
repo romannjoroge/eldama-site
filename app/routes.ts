@@ -6,6 +6,7 @@ export default [
   route("admin/reports", "routes/admin.reports.tsx"),
   route("admin/chat", "routes/admin.chat.tsx"),
   route("admin/users", "routes/admin.users.tsx"),
+  route("admin/profile", "routes/admin.profile.tsx"),
   route("api/track", "routes/api.track.tsx"),
   route("api/sessions", "routes/api/sessions.tsx"),
   route("api/sessions/:sessionId/messages", "routes/api/session-messages.tsx"),
