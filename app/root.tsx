@@ -16,6 +16,7 @@ import { Header } from "./components/header";
 import { Icon } from "./components/icons";
 import { IntroProvider } from "./components/intro";
 import { LiveChatWidget } from "./components/live-chat-widget";
+import { Toaster } from "./components/ui/sonner";
 import { QuoteProvider, useQuote } from "./components/quote-modal";
 import { ScrollProgress } from "./components/scroll-progress";
 import { SmoothScroll } from "./components/smooth-scroll";
@@ -46,6 +47,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         {children}
+        <Toaster position="top-right" richColors />
         <ScrollRestoration />
         <Scripts />
       </body>
